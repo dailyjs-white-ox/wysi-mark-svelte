@@ -13,6 +13,14 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write ."
 	},
+	"dependencies": {
+		"rehype-sanitize": "^5.0.1",
+		"rehype-stringify": "^9.0.3",
+		"remark-parse": "^10.0.1",
+		"remark-rehype": "^10.1.0",
+		"unified": "^10.1.2",
+		"vfile": "^5.3.7"
+	},
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
 		"@sveltejs/adapter-auto": "^2.0.0",
