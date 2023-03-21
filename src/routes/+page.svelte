@@ -20,6 +20,9 @@
   let slideMode = false;
   let slides: string[] = [];
 
+  let showToc = true;
+  let showPreview = true;
+
   function handleClickShowSlide() {
     slideMode = true;
   }
@@ -49,25 +52,43 @@
 {#if slideMode}
   <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides />
 {:else}
-  <nav class="navigator">
-    <button on:click={handleClickShowSlide}>Show Slide</button>
-  </nav>
-  <section class="toc">
-    <ContentsSidebar {slides} />
-  </section>
-  <section class="editor">
-    <textarea bind:value={source} />
-  </section>
-  <section class="preview">
-    {@html previewHtml}
-  </section>
+  <main>
+    <nav class="navigator">
+      <div>
+        <button on:click={handleClickShowSlide}>Show Slide</button>
+        <button on:click={() => (showToc = !showToc)}>ToC</button>
+      </div>
+      <div>
+        <button on:click={() => (showPreview = !showPreview)}>Preview</button>
+      </div>
+    </nav>
+    <section class="toc">
+      {#if showToc}
+        <ContentsSidebar {slides} />
+      {/if}
+    </section>
+    <section class="editor">
+      <textarea bind:value={source} />
+    </section>
+    <section class="preview">
+      {#if showPreview}
+        {@html previewHtml}
+      {/if}
+    </section>
+  </main>
 {/if}
 
 <style>
+  main {
+    display: grid;
+    grid-template-rows: 50px 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
   .navigator {
     grid-area: 1 / 1 / 2 / -1;
+    display: flex;
+    justify-content: space-between;
   }
-
   .toc {
     grid-area: 2 / 1 / 3 / 2;
   }
@@ -78,7 +99,7 @@
     grid-area: 2 / 3 / 3 / 5;
   }
   textarea {
-    height: 90%;
+    height: 100%;
     width: 95%;
     margin: 0px 10px;
   }
