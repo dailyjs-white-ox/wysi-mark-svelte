@@ -7,6 +7,7 @@
   import Slide from './Slide.svelte';
   import type { Snapshot } from './$types';
   import ContentsSidebar from './ContentsSidebar.svelte';
+  import Preview from './Preview.svelte';
 
   export const snapshot: Snapshot<string> = {
     capture: () => source,
@@ -72,9 +73,7 @@
     </section>
     <section class="preview">
       {#if showPreview}
-        <article>
-          {@html previewHtml}
-        </article>
+        <Preview {previewHtml} />
       {/if}
     </section>
   </main>
