@@ -1,11 +1,6 @@
 <script lang="ts">
-  import { unified } from 'unified';
-  import remarkParse from 'remark-parse';
-  import remarkRehype from 'remark-rehype';
-  import rehypeSanitize from 'rehype-sanitize';
-  import rehypeStringify from 'rehype-stringify';
+  import { markdown, html, slides } from './source_stores';
   import Slide from './Slide.svelte';
-  import type { Snapshot } from './$types';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import Preview from './Preview.svelte';
 
@@ -16,11 +11,7 @@
     },
   };
 
-  let source = '';
-  let previewHtml = '';
   let slideMode = false;
-  let slides: string[] = [];
-
   let showToc = true;
   let showPreview = true;
 
@@ -31,27 +22,13 @@
     slideMode = false;
   }
 
-  async function generatePreview(source: string) {
-    return await unified()
-      .use(remarkParse)
-      .use(remarkRehype)
-      .use(rehypeSanitize)
-      .use(rehypeStringify)
-      .process(source);
+  $: if ($markdown) {
+    captureSessionStorageSnapshot();
   }
-
-  $: (async function () {
-    const preview = await generatePreview(source);
-    previewHtml = preview.value.toString();
-    slides = previewHtml
-      .split('<hr>')
-      .map((preview) => preview.trim())
-      .filter((str) => Boolean(str));
-  })();
 </script>
 
 {#if slideMode}
-  <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides />
+  <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides={$slides} />
 {:else}
   <main class:hide-toc={!showToc} class:hide-preview={!showPreview}>
     <nav class="navigator">
@@ -65,15 +42,15 @@
     </nav>
     <section class="toc">
       {#if showToc}
-        <ContentsSidebar {slides} />
+        <ContentsSidebar slides={$slides} />
       {/if}
     </section>
     <section class="editor">
-      <textarea bind:value={source} />
+      <textarea bind:value={$markdown} />
     </section>
     <section class="preview">
       {#if showPreview}
-        <Preview {previewHtml} />
+        <Preview previewHtml={$html} />
       {/if}
     </section>
   </main>
