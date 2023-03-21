@@ -8,19 +8,25 @@
 
   let slideMode = false;
   let showToc = true;
+  let showEditor = true;
   let showPreview = true;
   let showProperties = false;
+
+  let selectedSlideIndex = 0;
+  let selectedDescendantIndexList: number[] = [];
 
   export const snapshot: Snapshot = {
     capture: () => ({
       markdown: $markdown,
       showToc,
+      showEditor,
       showProperties,
       showPreview,
     }),
     restore: ({ markdown, showToc, showProperties, showPreview }) => {
       $markdown = markdown;
       showToc = showToc;
+      showEditor = showEditor;
       showProperties = showProperties;
       showPreview = showPreview;
     },
@@ -44,6 +50,7 @@
 {:else}
   <main
     class:hide-toc={!showToc}
+    class:hide-editor={!showEditor}
     class:hide-preview={!showPreview}
     class:hide-properties={!showProperties}
   >
@@ -51,6 +58,7 @@
       <div>
         <button on:click={handleClickShowSlide}>Show Slide</button>
         <button on:click={() => (showToc = !showToc)}>ToC</button>
+        <button on:click={() => (showEditor = !showEditor)}>Editor</button>
       </div>
       <div>
         <button on:click={() => (showPreview = !showPreview)}>Preview</button>
@@ -67,11 +75,17 @@
     </section>
     <section class="preview">
       {#if showPreview}
-        <Preview previewHtml={$html} />
+        <Preview selected={[selectedSlideIndex, selectedDescendantIndexList]} />
       {/if}
     </section>
     <section class="properties">
-      <PropertiesSidebar />
+      <PropertiesSidebar
+        on:select={({ detail: [slideIndex, nodeDescendantIndexList] }) => {
+          console.log('select:', [slideIndex, nodeDescendantIndexList]);
+          selectedSlideIndex = slideIndex;
+          selectedDescendantIndexList = nodeDescendantIndexList;
+        }}
+      />
     </section>
   </main>
 {/if}
@@ -91,13 +105,16 @@
     display: grid;
     grid-template-rows: 50px 1fr;
     grid-template-columns:
-      var(--toc-width, 200px) minmax(0, 1fr) var(--preview-width, minmax(0, 1fr))
+      var(--toc-width, 200px)
+      var(--editor-width, minmax(0, 1fr))
+      var(--preview-width, minmax(0, 1fr))
       var(--properties-width, 200px);
   }
   .navigator {
     grid-area: 1 / 1 / 2 / -1;
     display: flex;
     justify-content: space-between;
+    padding: 0 4px;
   }
   .toc {
     grid-area: 2 / 1 / 3 / 2;
@@ -114,6 +131,9 @@
 
   main.hide-toc {
     --toc-width: 0;
+  }
+  main.hide-editor {
+    --editor-width: 0;
   }
   main.hide-preview {
     --preview-width: 0;

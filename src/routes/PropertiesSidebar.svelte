@@ -1,39 +1,26 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
 
   import { slides } from './source_stores';
   import { createHtmlElement } from './utils';
   import NestedNodeList from './NestedNodeList.svelte';
 
+  const dispatchEvent = createEventDispatcher();
+
   let slideIndex = 0;
   let htmlSource: string = '';
   let slideNode: HTMLElement;
-  let parentNodes: Node[] = [];
 
   $: (() => {
     htmlSource = $slides[slideIndex];
     if (browser) {
       const { body } = createHtmlElement(htmlSource);
-      if (!body) return;
-      slideNode = body;
-      parentNodes = [...slideNode.childNodes].filter((node) => node.nodeValue?.trim() !== '');
-      console.log('🚀 ~ file: PropertiesSidebar.svelte:16 ~ childNodes:', parentNodes, {
-        htmlSource,
-      });
+      if (body) {
+        slideNode = body;
+      }
     }
   })();
-
-  function getSummary(node: Node) {
-    return node.nodeName;
-  }
-
-  function getContent(node: Node) {
-    if (node.nodeType === document.ELEMENT_NODE) {
-      return node.textContent;
-    } else {
-      return node.nodeValue;
-    }
-  }
 </script>
 
 <aside>
@@ -47,7 +34,12 @@
 
   <h3>Nodes</h3>
   {#if slideNode}
-    <NestedNodeList node={slideNode} />
+    <NestedNodeList
+      node={slideNode}
+      on:select={({ detail: nodeDescendantIndexList }) => {
+        dispatchEvent('select', [slideIndex, nodeDescendantIndexList]);
+      }}
+    />
   {/if}
 </aside>
 

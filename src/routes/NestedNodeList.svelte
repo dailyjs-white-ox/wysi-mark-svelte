@@ -1,8 +1,13 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+  import { normalizeChildNodes } from './source_stores';
+
+  const dispatchEvent = createEventDispatcher();
+
   export let node: Node;
-  $: childNodes = [...node.childNodes]
-    .filter(({ nodeType }) => nodeType === document.ELEMENT_NODE || nodeType === document.TEXT_NODE)
-    .filter((node) => node.nodeValue?.trim() !== '');
+  $: childNodes = normalizeChildNodes(node);
+
+  // ui states
 
   $: nodesOpen = childNodes.map(() => false);
 
@@ -12,32 +17,46 @@
     if (lines.length === 0) {
       return text;
     }
-    return lines[0] + '...';
+    return lines[0] + `... (${lines.length} lines)`;
+  }
+
+  function toggleOpen(index: number) {
+    nodesOpen[index] = !nodesOpen[index];
   }
 </script>
 
 {#if node}
   <ol>
-    {#each childNodes as childNode, index}
-      <li tabindex="-1">
-        <span class="item-marker">{index + 1}.</span>
-        <div class="item-content">
+    {#each childNodes as childNode, childIndex}
+      <li tabindex="-1" on:focus={() => dispatchEvent('select', [childIndex])}>
+        <div class="summary-content">
+          {#if childNodes.length > 1}
+            <span class="item-marker">{childIndex + 1}. </span>
+          {/if}
           {#if childNode.nodeType === document.ELEMENT_NODE}
-            <div class="summary-content">
-              <span class="title">{childNode.nodeName}</span>
-              <span class="text-content" title={firstLine(childNode.textContent)}
-                >{childNode.textContent}</span
-              >
-              <button type="button" on:click={() => (nodesOpen[index] = !nodesOpen[index])}
-                >{nodesOpen[index] ? 'Close' : 'Open'}</button
-              >
-            </div>
-
-            {#if nodesOpen[index]}
-              <svelte:self node={childNode} />
-            {/if}
+            <span class="title">
+              <button type="button" on:click={() => toggleOpen(childIndex)}>
+                {childNode.nodeName}
+              </button>
+            </span>
+            <span class="text-content" title={firstLine(childNode.textContent)}
+              >{childNode.textContent}</span
+            >
+            <button type="button" on:click={() => toggleOpen(childIndex)}
+              >{nodesOpen[childIndex] ? 'Close' : 'Open'}</button
+            >
           {:else if childNode.nodeType === document.TEXT_NODE}
             <textarea value={childNode.nodeValue} />
+          {/if}
+        </div>
+        <div class="nested">
+          {#if nodesOpen[childIndex]}
+            <svelte:self
+              node={childNode}
+              on:select={({ detail: indexes }) => {
+                dispatchEvent('select', [childIndex].concat(indexes));
+              }}
+            />
           {/if}
         </div>
       </li>
@@ -53,10 +72,11 @@
   li {
     list-style: none;
     display: flex;
-    flex-direction: row;
-    gap: 0.5em;
+    flex-direction: column;
+    /*gap: 0.5em;*/
 
-    margin: 5px 1px 10px 1px;
+    margin: 4px 1px 4px 1px;
+    padding: 2px;
   }
   li:focus {
     outline: 1px dashed #333;
@@ -65,9 +85,8 @@
   .item-marker {
     flex: 0 0 auto;
   }
-  .item-content {
-    flex: 1 1 auto;
-    overflow: hidden;
+  .nested {
+    margin-left: 0.5em;
   }
 
   .summary-content {

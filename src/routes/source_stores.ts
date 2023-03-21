@@ -6,6 +6,7 @@ import remarkRehype from 'remark-rehype';
 import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import type { VFile } from 'vfile';
+import { createHtmlElement } from './utils';
 
 //$: slidesHtml = previewHtml
 //  .split('<hr>')
@@ -29,13 +30,21 @@ export const html: Readable<string> = ((markdown) => {
 
 export const slides: Readable<string[]> = derived(html, ($html) =>
   $html.split('<hr>').map(text => text.trim()).filter(Boolean)
-)
+);
 
-async function processMarkdown(source: string): Promise<VFile> {
+export async function processMarkdown(source: string): Promise<VFile> {
   return await unified()
     .use(remarkParse)
     .use(remarkRehype)
     .use(rehypeSanitize)
     .use(rehypeStringify)
     .process(source);
+}
+
+export function normalizeChildNodes(node: Node) {
+  return [...node.childNodes]
+    .filter(
+      ({ nodeType }) => nodeType === document.ELEMENT_NODE || nodeType === document.TEXT_NODE
+    )
+    .filter((node) => node.nodeValue?.trim() !== '');
 }
