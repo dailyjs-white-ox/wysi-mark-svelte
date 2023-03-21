@@ -52,7 +52,7 @@
 {#if slideMode}
   <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides />
 {:else}
-  <main>
+  <main class:hide-toc={!showToc} class:hide-preview={!showPreview}>
     <nav class="navigator">
       <div>
         <button on:click={handleClickShowSlide}>Show Slide</button>
@@ -72,17 +72,31 @@
     </section>
     <section class="preview">
       {#if showPreview}
-        {@html previewHtml}
+        <article>
+          {@html previewHtml}
+        </article>
       {/if}
     </section>
   </main>
 {/if}
 
 <style>
+  /* positions & sizes */
+  main {
+    height: 100%;
+    overflow: hidden;
+  }
+  main > section {
+    max-height: 100%;
+    overflow: auto;
+  }
+  /* layouts */
   main {
     display: grid;
     grid-template-rows: 50px 1fr;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns:
+      var(--toc-width, 200px) minmax(0, 1fr) var(--preview-width, minmax(0, 1fr))
+      0;
   }
   .navigator {
     grid-area: 1 / 1 / 2 / -1;
@@ -98,6 +112,16 @@
   .preview {
     grid-area: 2 / 3 / 3 / 5;
   }
+
+  main.hide-toc {
+    --toc-width: 0;
+  }
+  main.hide-preview {
+    --preview-width: 0;
+  }
+
+  /* --- */
+
   textarea {
     height: 100%;
     width: 95%;
