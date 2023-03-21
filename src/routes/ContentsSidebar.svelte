@@ -1,27 +1,24 @@
 <script lang="ts">
+  import { createHtmlElement } from './utils';
+
   export let slides: string[] = [];
 
   function contentTitle(htmlSource: string): string {
-    const htmlEl = createHtmlElement(htmlSource);
+    const { body } = createHtmlElement(htmlSource);
+    if (!body) return '';
 
-    const headingEl = htmlEl.querySelector('h1,h2,h3,h4,h5,h6');
+    const headingEl = body.querySelector('h1,h2,h3,h4,h5,h6');
     if (headingEl !== null) {
       return headingEl.textContent ?? '';
     }
 
     // return first printable line
-    const node = [...htmlEl.childNodes].find((node) => node.textContent);
+    const node = [...body.childNodes].find((node) => node.textContent);
     if (node) {
       return node.textContent ?? '';
     }
 
     return '';
-  }
-
-  function createHtmlElement(source: string): HTMLHtmlElement {
-    const htmlEl = document.createElement('html');
-    htmlEl.innerHTML = source;
-    return htmlEl;
   }
 </script>
 
