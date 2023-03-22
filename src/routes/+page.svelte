@@ -4,19 +4,13 @@
   import remarkRehype from 'remark-rehype';
   import rehypeSanitize from 'rehype-sanitize';
   import rehypeStringify from 'rehype-stringify';
-  import Slide from './Slide.svelte';
+  import Presentation from './Presentation.svelte';
 
   let source = '';
   let previewHtml = '';
-  let slideMode = false;
   let slides: string[] = [];
 
-  function handleClickShowSlide() {
-    slideMode = true;
-  }
-  function handleClickCloseSlide() {
-    slideMode = false;
-  }
+  let showPresentation = false;
 
   async function generatePreview(source: string) {
     return await unified()
@@ -33,15 +27,15 @@
     slides = previewHtml
       .split('<hr>')
       .map((preview) => preview.trim())
-      .filter((str) => Boolean(str));
+      .filter(Boolean);
   })();
 </script>
 
-{#if slideMode}
-  <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides />
+{#if showPresentation}
+  <Presentation on:close={() => (showPresentation = false)} bind:slides />
 {:else}
   <nav class="navigator">
-    <button on:click={handleClickShowSlide}>Show Slide</button>
+    <button on:click={() => (showPresentation = true)}>Show Presentation</button>
   </nav>
   <section class="editor">
     <textarea bind:value={source} />
