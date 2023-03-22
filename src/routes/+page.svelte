@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
+  import useSessionStorageSnapshot from './use_session_storage_snapshot';
   import { markdown, html, slides } from './source_stores';
   import Slide from './Slide.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import Preview from './Preview.svelte';
-  import useSessionSnapshotStorage from './use_session_storage_snapshot';
-  import { onMount } from 'svelte';
+  import PropertiesSidebar from './PropertiesSidebar.svelte';
+  import type { Snapshot } from './$types';
 
   let slideMode = false;
   let showToc = true;
@@ -31,7 +34,11 @@
       showPreview = showPreview;
     },
   };
-
+  const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
+    useSessionStorageSnapshot({
+      ...snapshot,
+      key: 'page:source',
+    });
 
   function handleClickShowSlide() {
     slideMode = true;
@@ -41,8 +48,15 @@
   }
 
   $: if ($markdown) {
-    captureSessionStorageSnapshot();
+    console.log('$markdown:', JSON.stringify($markdown));
+    const capturedValue = captureSessionStorageSnapshot();
+    console.log('🚀 capturedValue:', capturedValue);
   }
+
+  onMount(() => {
+    const restoredValue = restoreSessionStorageSnapshot();
+    console.log('🚀 restoredValue:', restoredValue);
+  });
 </script>
 
 {#if slideMode}
