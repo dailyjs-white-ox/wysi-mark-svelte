@@ -6,10 +6,67 @@ import type { Readable } from 'svelte/store';
 
 import '../spec_helpers';
 
-import { markdown, htmlAsync, html, mdast, hast } from './source_stores';
-
+import { markdown, html, mdast, hast } from './source_stores';
 
 describe('markdown to html', () => {
+
+  describe('mdast', () => {
+    it('should render MDAST if markdown is set', async () => {
+      let $mdast;
+      mdast.subscribe((value) => {
+        $mdast = value;
+      });
+
+      markdown.set('a *markdown* text');
+
+      //await tick();
+      // requires async not because of how stores work, but how remark works.
+      await delayAsync(10);
+      //console.log("🚀 $mdast:", JSON.stringify($mdast, null, 2))
+
+      expect($mdast).toBeTypeOf('object');
+      const expectedShape = {
+        type: 'root',
+        children: [{
+          type: 'paragraph', children: [
+            { type: 'text', value: 'a ' },
+            { type: 'emphasis', children: [{ type: 'text', value: 'markdown' }] },
+            { type: 'text', value: ' text' }
+          ]
+        }]
+      };
+      expect($mdast).toMatchObject(expectedShape);
+    });
+  });
+
+  describe('hast', () => {
+    it('should render HAST if markdown is set', async () => {
+      let $hast;
+      hast.subscribe((value) => {
+        $hast = value;
+      });
+
+      markdown.set('a *markdown* text');
+
+      //await tick();
+      // requires async not because of how stores work, but how remark works.
+      await delayAsync(10);
+
+      expect($hast).toBeTypeOf('object');
+      const expectedShape = {
+        type: 'root',
+        children: [{
+          type: 'element', tagName: 'p', properties: {}, children: [
+            { type: 'text', value: 'a ' },
+            { type: 'element', tagName: 'em', children: [{ type: 'text', value: 'markdown' }] },
+            { type: 'text', value: ' text' }
+          ]
+        }],
+      };
+      expect($hast).toMatchObject(expectedShape);
+    });
+  });
+
   describe('html store', () => {
     it('should render HTML if markdown is set', async () => {
       let $html;
@@ -24,7 +81,7 @@ describe('markdown to html', () => {
       await delayAsync(10);
 
       //console.log("🚀 ~ file: source_stores.spec.ts:32 ~ html.subscribe ~ $html:", JSON.stringify($html));
-      expect(JSON.stringify($html)).toEqual(JSON.stringify('<p>a <em>markdown</em> text</p>'));
+      expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
 
     it("MAY work with get(html) because of being async", async () => {
@@ -39,43 +96,57 @@ describe('markdown to html', () => {
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
   });
-
-  describe('htmlAsync store', () => {
-    it('should resolve into HTML with subscription', async () => {
-      let htmlPr: Promise<string> | undefined;
-      htmlAsync.subscribe((value) => { htmlPr = value });
-
-      markdown.set('a *markdown* text');
-
-      // no ticks required, as the process is synchronous.
-
-      expect(htmlPr).toBeDefined();
-      if (typeof htmlPr === 'undefined') return;
-
-      // htmlAsync is a promise
-      expect(htmlPr.then).toBeTypeOf('function');
-
-      // which resolves into html
-      const $html = await htmlPr;
-      expect($html).toEqual('<p>a <em>markdown</em> text</p>');
-    });
-
-    it('should resolve into HTML with get', async () => {
-      markdown.set('a *markdown* text');
-
-      // htmlAsync is a promise
-      const pr = get(htmlAsync);
-      expect(pr.then).toBeTypeOf('function');
-
-      // which resolves into html
-      const $html = await pr;
-      expect($html).toEqual('<p>a <em>markdown</em> text</p>');
-    });
-  });
 });
 
-describe.skip('html to markdown', () => {
-  it('should render Markdown if html is set', async () => {
+describe('html to markdown', () => {
+  it('should build hast if html is set', () => {
+    let $hast;
+    hast.subscribe((value) => {
+      $hast = value;
+    });
+
+    html.set('<p>a <em>html</em> text</p>')
+
+    //await tick();
+
+    const expectedShape = {
+      type: 'root',
+      children: [{
+        type: 'element', tagName: 'p', properties: {}, children: [
+          { type: 'text', value: 'a ' },
+          { type: 'element', tagName: 'em', children: [{ type: 'text', value: 'html' }] },
+          { type: 'text', value: ' text' }
+        ]
+      }],
+    };
+    expect($hast).toMatchObject(expectedShape);
+  });
+
+  it('should build mdast if html is set', () => {
+    let $mdast;
+    mdast.subscribe((value) => {
+      $mdast = value;
+    });
+
+    html.set('<p>a <em>html</em> text</p>')
+
+    //await tick();
+    //console.log("🚀 ~ file: source_stores.spec.ts:165 ~ mdast.subscribe ~ $mdast:", $mdast)
+
+    const expectedShape = {
+      type: 'root',
+      children: [{
+        type: 'paragraph', children: [
+          { type: 'text', value: 'a ' },
+          { type: 'emphasis', children: [{ type: 'text', value: 'html' }] },
+          { type: 'text', value: ' text' }
+        ]
+      }]
+    };
+    expect($mdast).toMatchObject(expectedShape);
+  });
+
+  it('should render markdown if html is set', async () => {
     let $markdown;
     markdown.subscribe((value) => {
       $markdown = value;
@@ -85,70 +156,71 @@ describe.skip('html to markdown', () => {
 
     //await tick();
     // requires async not because of how stores work, but how remark works.
-    await delayAsync(10);
+    //await delayAsync(10);
 
     //console.log("🚀 ~ file: source_stores.spec.ts:32 ~ html.subscribe ~ $html:", JSON.stringify($html));
-    expect($markdown).toEqual('a *html* text');
+    expect($markdown.trim()).toEqual('a *html* text');
   });
 
 })
 
-describe('mdast', () => {
-  it('should render MDAST if markdown is set', async () => {
+describe('changing hast', () => {
+  it('should propagate to html', () => {
+    let $html;
+    html.subscribe((value) => {
+      $html = value;
+    });
+
+    hast.set({
+      type: 'root',
+      children: [{
+        type: 'element', tagName: 'p', properties: {}, children: [
+          { type: 'text', value: 'a ' },
+          { type: 'element', tagName: 'em', children: [{ type: 'text', value: 'html' }] },
+          { type: 'text', value: ' text' }
+        ]
+      }],
+    })
+
+    expect($html).toEqual('<p>a <em>html</em> text</p>');
+  });
+
+  it('should propagate to markdown', () => {
+    let $markdown: string = '';
+    markdown.subscribe((value) => {
+      $markdown = value;
+    });
     let $mdast;
     mdast.subscribe((value) => {
       $mdast = value;
     });
 
-    markdown.set('a *markdown* text');
-
-    //await tick();
-    // requires async not because of how stores work, but how remark works.
-    await delayAsync(10);
-    //console.log("🚀 $mdast:", JSON.stringify($mdast, null, 2))
-
-    expect($mdast).toBeTypeOf('object');
-    const expectedShape = {
-      type: 'root',
-      children: [{
-        type: 'paragraph', children: [
-          { type: 'text', value: 'a ' },
-          { type: 'emphasis', children: [{ type: 'text', value: 'markdown' }] },
-          { type: 'text', value: ' text' }
-        ]
-      }]
-    };
-    expect($mdast).toMatchObject(expectedShape);
-  });
-});
-
-describe('hast', () => {
-  it('should render HAST if markdown is set', async () => {
-    let $hast;
-    hast.subscribe((value) => {
-      $hast = value;
-    });
-
-    markdown.set('a *markdown* text');
-
-    //await tick();
-    // requires async not because of how stores work, but how remark works.
-    await delayAsync(10);
-
-    expect($hast).toBeTypeOf('object');
-    const expectedShape = {
+    // action
+    hast.set({
       type: 'root',
       children: [{
         type: 'element', tagName: 'p', properties: {}, children: [
           { type: 'text', value: 'a ' },
-          { type: 'element', tagName: 'em', children: [{ type: 'text', value: 'markdown' }] },
+          { type: 'element', tagName: 'em', children: [{ type: 'text', value: 'html' }] },
           { type: 'text', value: ' text' }
         ]
       }],
-    };
-    expect($hast).toMatchObject(expectedShape);
+    })
+
+    expect($mdast).toMatchObject({
+      type: 'root',
+      children: [{
+        type: 'paragraph', children: [
+          { type: 'text', value: 'a ' },
+          { type: 'emphasis', children: [{ type: 'text', value: 'html' }] },
+          { type: 'text', value: ' text' }
+        ]
+      }]
+    });
+    expect($markdown.trim()).toEqual('a *html* text');
   });
-})
+});
+
 
 // utils
 

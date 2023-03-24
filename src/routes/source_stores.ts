@@ -7,87 +7,67 @@ import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import { toHast } from 'mdast-util-to-hast'
+import { toMarkdown } from 'mdast-util-to-markdown';
+import { fromHtml } from 'hast-util-from-html'
+import { toMdast } from 'hast-util-to-mdast';
 import { toHtml } from 'hast-util-to-html'
 //var { fromMarkdown } = await import('mdast-util-from-markdown')
 //var { toHast }       = await import('mdast-util-to-hast')
 //var { toHtml }       = await import('hast-util-to-html')
-import type { Root as MdastRoot } from 'mdast-util-from-markdown/lib/index.js'
+//import type { Root as MdastRoot } from 'mdast-util-from-markdown/lib/index.js'
 import type { HastNodes } from 'mdast-util-to-hast/lib/index.js'
+import type { MdastNode } from 'hast-util-to-mdast/lib/index.js'
 import type { VFile } from 'vfile';
-//import { createHtmlElement } from './utils';
 
-//$: slidesHtml = previewHtml
-//  .split('<hr>')
-//  .map((preview) => preview.trim())
-//  .filter((str) => Boolean(str));
+export const markdown = writable('');
+export const html = writable('');
+export const mdast: Writable<MdastNode> = writable();
+export const hast: Writable<HastNodes> = writable();
 
-export const markdown: Writable<string> = writable('');
+// propagate change on html change
+html.subscribe(($html) => {
+  const hastTree = fromHtml($html, { fragment: true });
+  hast.set(hastTree);
 
-export const mdast: Readable<MdastRoot> = derived(markdown, ($markdown) => {
-  return parseMarkdown($markdown);
+  const mdastTree = toMdast(hastTree);
+  mdast.set(mdastTree);
+
+  const markdownSource = toMarkdown(mdastTree);
+  markdown.set(markdownSource);
 });
 
-export const hast: Readable<HastNodes> = derived(mdast, ($mdast) => {
-  return convertMdastToHast($mdast);
+// propagate change on markdown change
+markdown.subscribe(($markdown) => {
+  const mdastTree = fromMarkdown($markdown);
+  mdast.set(mdastTree);
+
+  const hastTree = toHast(mdastTree);
+  if (!hastTree) {
+    throw new Error('failed transforming mdast to hast');
+  }
+  hast.set(hastTree);
+
+  const htmlSource = toHtml(hastTree);
+  html.set(htmlSource);
 });
 
-export const htmlAsync: Readable<Promise<string>> = derived(markdown, ($markdown) => {
-  return processMarkdown($markdown).then((result) => String(result.value));
+hast.subscribe(($hast) => {
+  // propagate towards html
+  const htmlSource = toHtml($hast);
+  html.set(htmlSource);
+
+  // propagate towards markdown
+  const mdastTree = toMdast($hast);
+  mdast.set(mdastTree);
+  const markdownSource = toMarkdown(mdastTree);
+  markdown.set(markdownSource);
 })
-
-//export const html: Readable<string> & { promise: Promise<string> } = ((markdown) => {
-//  const store = writable<string>('');
-//
-//  let promise;
-//  markdown.subscribe(($markdown) => {
-//    console.log('markdown value changed:', JSON.stringify($markdown));
-//    console.log('processing...');
-//    promise = processMarkdown($markdown).then((result) => {
-//      console.log('done.', result);
-//      const value = String(result.value);
-//      store.set(value);
-//      return value;
-//    });
-//  });
-//
-//  // omit 'set'
-//  const { set, update, ...rest } = store;
-//  return { ...rest, promise };
-//})(markdown);
-
-//export const html: Readable<string> = readable('', function start(set) {
-//  htmlAsync.subscribe(async (pr) => {
-//    const $html = await pr;
-//    //console.log('awaited htmlAsync. $html:', $html)
-//    set($html);
-//  });
-//});
-
-export const html = derived(hast, ($hast) => {
-  return stringifyHastToHtml($hast);
-});
 
 export const slides: Readable<string[]> = derived(html, ($html) =>
   $html.split('<hr>').map(text => text.trim()).filter(Boolean)
 );
 
 // functions
-
-function parseMarkdown(source: string): MdastRoot {
-  return fromMarkdown(source);
-}
-
-function convertMdastToHast(mdast: MdastRoot): HastNodes {
-  const hast = toHast(mdast);
-  if (!hast) {
-    throw new Error('failed converting to hast');
-  }
-  return hast;
-}
-
-function stringifyHastToHtml(hast: HastNodes): string {
-  return toHtml(hast);
-}
 
 export async function processMarkdown(source: string): Promise<VFile> {
   return await unified()
