@@ -26,12 +26,12 @@
       showProperties,
       showPreview,
     }),
-    restore: ({ markdown, showToc, showProperties, showPreview }) => {
-      $markdown = markdown;
-      showToc = showToc;
-      showEditor = showEditor;
-      showProperties = showProperties;
-      showPreview = showPreview;
+    restore: (state) => {
+      $markdown = state.markdown;
+      showToc = state.showToc;
+      showEditor = state.showEditor;
+      showProperties = state.showProperties;
+      showPreview = state.showPreview;
     },
   };
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
@@ -47,16 +47,19 @@
     slideMode = false;
   }
 
-  $: if ($markdown) {
-    console.log('$markdown:', JSON.stringify($markdown));
-    const capturedValue = captureSessionStorageSnapshot();
-    console.log('🚀 capturedValue:', capturedValue);
-  }
-
+  let didMount = false;
   onMount(() => {
     const restoredValue = restoreSessionStorageSnapshot();
     console.log('🚀 restoredValue:', restoredValue);
+    didMount = true;
   });
+  // run this after mount
+  $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties) => {
+    if (!didMount) return;
+
+    const capturedValue = captureSessionStorageSnapshot();
+    console.log('🚀 capturedValue:', capturedValue);
+  })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
 {#if slideMode}

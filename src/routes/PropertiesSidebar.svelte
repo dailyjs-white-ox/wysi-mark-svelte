@@ -2,15 +2,18 @@
   import { createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
 
-  import { slides } from '../lib/source_stores';
+  import { hast, html, markdown, slides, slideHasts } from '../lib/source_stores';
   import { createHtmlElement } from './utils';
   import NestedNodeList from '../lib/components/NestedNodeList.svelte';
+  import NestedHastElementList from '../lib/components/NestedHastElementList.svelte';
+  import type { HastContent, HastElement } from 'mdast-util-to-hast/lib/state';
 
   const dispatchEvent = createEventDispatcher();
 
   let slideIndex = 0;
   let htmlSource: string = '';
   let slideNode: HTMLElement;
+  let slideHastNodeGroup: HastContent[];
 
   $: (() => {
     htmlSource = $slides[slideIndex];
@@ -21,7 +24,8 @@
       }
     }
   })();
-
+  $: console.log('$hast :', $hast, { $html, $markdown, $slideHasts });
+  $: slideHastNodeGroup = $slideHasts[slideIndex];
 </script>
 
 <aside>
@@ -34,9 +38,12 @@
   </fieldset>-->
 
   <h3>Nodes</h3>
-  {#if slideNode}
-    <NestedNodeList
-      node={slideNode}
+  <!--{#if slideNode}
+    <NestedNodeList node={slideNode} on:select={({ detail }) => dispatchEvent('select', [slideIndex, detail])} />
+  {/if}-->
+  {#if slideHastNodeGroup}
+    <NestedHastElementList
+      nodeGroup={slideHastNodeGroup}
       on:select={({ detail: nodeDescendantIndexList }) => {
         dispatchEvent('select', [slideIndex, nodeDescendantIndexList]);
       }}

@@ -11,18 +11,16 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { fromHtml } from 'hast-util-from-html'
 import { toMdast } from 'hast-util-to-mdast';
 import { toHtml } from 'hast-util-to-html'
-//var { fromMarkdown } = await import('mdast-util-from-markdown')
-//var { toHast }       = await import('mdast-util-to-hast')
-//var { toHtml }       = await import('hast-util-to-html')
-//import type { Root as MdastRoot } from 'mdast-util-from-markdown/lib/index.js'
-import type { HastNodes } from 'mdast-util-to-hast/lib/index.js'
+import type { HastRoot, HastNodes, HastContent } from 'mdast-util-to-hast/lib/index.js';
 import type { MdastNode } from 'hast-util-to-mdast/lib/index.js'
 import type { VFile } from 'vfile';
+
+export type { HastNodes, HastContent };
 
 export const markdown = writable('');
 export const html = writable('');
 export const mdast: Writable<MdastNode> = writable();
-export const hast: Writable<HastNodes> = writable();
+export const hast: Writable<HastRoot> = writable();
 
 // propagate change on html change
 html.subscribe(($html) => {
@@ -61,6 +59,40 @@ hast.subscribe(($hast) => {
   mdast.set(mdastTree);
   const markdownSource = toMarkdown(mdastTree);
   markdown.set(markdownSource);
+});
+
+import { filter } from 'unist-util-filter'
+
+export const slideHasts = derived(hast, ($hast) => {
+  // normalize children - remove blank text nodes, throughout the tree
+  const { children } = filter($hast, null, (node) => {
+    if (node.type === 'text' && node.value.trim() === '') {
+      return false;
+    }
+    return true;
+  }) as HastRoot;
+
+  // group by hr
+  const groups = children.reduce<HastContent[][]>((memo, node) => {
+    const lastGroup = memo.at(-1) ?? [];
+
+    // insert new group
+    if (node.type === 'element' && node.tagName === 'hr') {
+      memo.push([]);
+    }
+    // insert into last group
+    else {
+      lastGroup.push(node);
+    }
+
+    return memo;
+  }, [[]]);
+
+  if (groups.length > 0 && groups[0].length === 0) {
+    groups.shift();
+  }
+
+  return groups;
 });
 
 export const slides: Readable<string[]> = derived(html, ($html) =>
