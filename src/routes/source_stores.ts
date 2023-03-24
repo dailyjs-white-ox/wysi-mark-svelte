@@ -6,7 +6,7 @@ import remarkRehype from 'remark-rehype';
 import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import type { VFile } from 'vfile';
-import { createHtmlElement } from './utils';
+//import { createHtmlElement } from './utils';
 
 //$: slidesHtml = previewHtml
 //  .split('<hr>')
@@ -15,18 +15,37 @@ import { createHtmlElement } from './utils';
 
 export const markdown: Writable<string> = writable('');
 
-export const html: Readable<string> = ((markdown) => {
-  const store = writable<string>('');
+export const htmlAsync: Readable<Promise<string>> = derived(markdown, ($markdown) => {
+  return processMarkdown($markdown).then((result) => String(result.value));
+})
 
-  markdown.subscribe(async ($markdown) => {
-    const result = await processMarkdown($markdown);
-    store.set(String(result.value));
+//export const html: Readable<string> & { promise: Promise<string> } = ((markdown) => {
+//  const store = writable<string>('');
+//
+//  let promise;
+//  markdown.subscribe(($markdown) => {
+//    console.log('markdown value changed:', JSON.stringify($markdown));
+//    console.log('processing...');
+//    promise = processMarkdown($markdown).then((result) => {
+//      console.log('done.', result);
+//      const value = String(result.value);
+//      store.set(value);
+//      return value;
+//    });
+//  });
+//
+//  // omit 'set'
+//  const { set, update, ...rest } = store;
+//  return { ...rest, promise };
+//})(markdown);
+
+export const html: Readable<string> = readable('', function start(set) {
+  htmlAsync.subscribe(async (pr) => {
+    const $html = await pr;
+    //console.log('awaited htmlAsync. $html:', $html)
+    set($html);
   });
-
-  // omit 'set'
-  const { set, ...rest } = store;
-  return rest;
-})(markdown);
+});
 
 export const slides: Readable<string[]> = derived(html, ($html) =>
   $html.split('<hr>').map(text => text.trim()).filter(Boolean)
