@@ -1,7 +1,10 @@
 import { describe, it, beforeEach, expect } from 'vitest';
+
 import { tick } from 'svelte';
 import { get, writable } from 'svelte/store';
 import type { Readable } from 'svelte/store';
+
+import '../spec_helpers';
 
 import { markdown, htmlAsync, html, mdast, hast } from './source_stores';
 
@@ -33,7 +36,6 @@ describe('markdown to html', () => {
 
       const $html = get(html);
 
-      //console.log("🚀 ~ file: source_stores.spec.ts:25 ~ it.only ~ $html2:", $html2)
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
   });
@@ -92,7 +94,7 @@ describe.skip('html to markdown', () => {
 })
 
 describe('mdast', () => {
-  it.only('should render MDAST if markdown is set', async () => {
+  it('should render MDAST if markdown is set', async () => {
     let $mdast;
     mdast.subscribe((value) => {
       $mdast = value;
@@ -106,38 +108,19 @@ describe('mdast', () => {
     //console.log("🚀 $mdast:", JSON.stringify($mdast, null, 2))
 
     expect($mdast).toBeTypeOf('object');
-    //expect($mdast.children[0]).toMatchObject({
-    //  type: "paragraph",
-    //  children: [
-    //    { type: 'text', value: 'a ' },
-    //    { type: 'emphasize', children: [{ type: 'text', value: 'markdown' }] },
-    //    { type: 'text', value: ' text' }
-    //  ]
-    //})
-    expect($mdast).toHaveProperty('type', 'root');
-    expect($mdast).toHaveProperty('children');
-    //expect($mdast.children).toHaveLength(1);
-    expect($mdast).toHaveProperty('children', expect.arrayHavingLength(1));
-    //expect($mdast.children[0]).toHaveProperty('type', 'paragraph');
-    expect($mdast).toHaveProperty('children[0].type', 'paragraph');
-    expect($mdast).toHaveProperty('children[0].children');
-    //expect($mdast.children[0].children).toHaveLength(3);
-    expect($mdast).toHaveProperty('children[0].children', expect.arrayHavingLength(3));
-    //expect($mdast).toHaveProperty('children[0].children[0].type', 'text');
-    //expect($mdast).toHaveProperty('children[0].children[0].value', 'a ');
-    expect($mdast).toHaveProperty('children[0].children[0]', expect.objectContaining(
-      { type: 'text', value: 'a ', position: expect.anything() }
-    ));
-    expect($mdast).toHaveProperty('children[0].children[1]', expect.objectContaining({
-      type: 'emphasis', children: [
-        { type: 'text', value: 'markdown', position: expect.anything() }
-      ]
-    }));
-    expect($mdast).toHaveProperty('children[0].children[2]', expect.objectContaining(
-      { type: 'text', value: ' text', position: expect.anything() }
-    ));
+    const expectedShape = {
+      type: 'root',
+      children: [{
+        type: 'paragraph', children: [
+          { type: 'text', value: 'a ' },
+          { type: 'emphasis', children: [{ type: 'text', value: 'markdown' }] },
+          { type: 'text', value: ' text' }
+        ]
+      }]
+    };
+    expect($mdast).toMatchObject(expectedShape);
   });
-})
+});
 
 describe('hast', () => {
   it('should render HAST if markdown is set', async () => {
@@ -153,6 +136,17 @@ describe('hast', () => {
     await delayAsync(10);
 
     expect($hast).toBeTypeOf('object');
+    const expectedShape = {
+      type: 'root',
+      children: [{
+        type: 'element', tagName: 'p', properties: {}, children: [
+          { type: 'text', value: 'a ' },
+          { type: 'element', tagName: 'em', children: [{ type: 'text', value: 'markdown' }] },
+          { type: 'text', value: ' text' }
+        ]
+      }],
+    };
+    expect($hast).toMatchObject(expectedShape);
   });
 })
 
@@ -165,16 +159,3 @@ async function delayAsync(ms = 0) {
     }, ms);
   });
 }
-
-expect.extend({
-  arrayHavingLength: (...args) => {
-    const [received, expected] = args;
-    if (received.length !== expected) {
-      return {
-        message: () => `expected ${received} to have length ${expected}`,
-        pass: false,
-      };
-    }
-    return { pass: true };
-  }
-})
