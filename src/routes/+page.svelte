@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
 
   import useSessionStorageSnapshot from './use_session_storage_snapshot';
-  import { markdown, html, slides } from './source_stores';
+  import { markdown, html, slides } from '../lib/source_stores';
   import Slide from './Slide.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import Preview from './Preview.svelte';

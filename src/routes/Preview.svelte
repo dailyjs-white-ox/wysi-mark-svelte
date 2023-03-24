@@ -2,7 +2,8 @@
   import { browser } from '$app/environment';
 
   import { createHtmlElement } from './utils';
-  import { normalizeChildNodes, slides } from './source_stores';
+  import { normalizeChildNodes, slides } from '../lib/source_stores';
+  import { onMount } from 'svelte';
 
   export let selected: [number, number[]];
   $: selectedSlideIndex = selected?.[0];

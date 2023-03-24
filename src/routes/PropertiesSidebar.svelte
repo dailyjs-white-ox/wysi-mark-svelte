@@ -2,9 +2,9 @@
   import { createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
 
-  import { slides } from './source_stores';
+  import { slides } from '../lib/source_stores';
   import { createHtmlElement } from './utils';
-  import NestedNodeList from './NestedNodeList.svelte';
+  import NestedNodeList from '../lib/components/NestedNodeList.svelte';
 
   const dispatchEvent = createEventDispatcher();
 
@@ -21,6 +21,7 @@
       }
     }
   })();
+
 </script>
 
 <aside>

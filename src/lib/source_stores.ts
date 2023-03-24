@@ -61,7 +61,7 @@ hast.subscribe(($hast) => {
   mdast.set(mdastTree);
   const markdownSource = toMarkdown(mdastTree);
   markdown.set(markdownSource);
-})
+});
 
 export const slides: Readable<string[]> = derived(html, ($html) =>
   $html.split('<hr>').map(text => text.trim()).filter(Boolean)
