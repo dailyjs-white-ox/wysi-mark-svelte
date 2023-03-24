@@ -5,6 +5,11 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
+import { fromMarkdown } from 'mdast-util-from-markdown'
+import { toHast } from 'mdast-util-to-hast'
+
+import type { Root as MdastRoot } from 'mdast-util-from-markdown/lib/index.js'
+import type { HastNodes } from 'mdast-util-to-hast/lib/index.js'
 import type { VFile } from 'vfile';
 //import { createHtmlElement } from './utils';
 
@@ -14,6 +19,14 @@ import type { VFile } from 'vfile';
 //  .filter((str) => Boolean(str));
 
 export const markdown: Writable<string> = writable('');
+
+export const mdast: Readable<MdastRoot> = derived(markdown, ($markdown) => {
+  return parseMarkdown($markdown);
+});
+
+export const hast: Readable<HastNodes | null | undefined> = derived(mdast, ($mdast) => {
+  return convertMdastToHast($mdast);
+});
 
 export const htmlAsync: Readable<Promise<string>> = derived(markdown, ($markdown) => {
   return processMarkdown($markdown).then((result) => String(result.value));
@@ -50,6 +63,14 @@ export const html: Readable<string> = readable('', function start(set) {
 export const slides: Readable<string[]> = derived(html, ($html) =>
   $html.split('<hr>').map(text => text.trim()).filter(Boolean)
 );
+
+function parseMarkdown(source: string): MdastRoot {
+  return fromMarkdown(source);
+}
+
+function convertMdastToHast(mdast: MdastRoot): HastNodes | null | undefined {
+  return toHast(mdast);
+}
 
 export async function processMarkdown(source: string): Promise<VFile> {
   return await unified()
