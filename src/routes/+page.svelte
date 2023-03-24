@@ -5,7 +5,7 @@
   import { markdown, html, slides } from '../lib/source_stores';
   import Slide from './Slide.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
-  import Preview from './Preview.svelte';
+  import Preview from '../lib/components/Preview/Preview.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import type { Snapshot } from './$types';
 
