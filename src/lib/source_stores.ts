@@ -73,7 +73,7 @@ export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   }) as HastRoot;
 
   // group nodes by HR node
-  const groups = children.reduce<HastContent[][]>((memo, node) => {
+  const groups: HastContent[][] = children.reduce<HastContent[][]>((memo, node) => {
     const lastGroup = memo.at(-1) ?? [];
 
     // insert new group

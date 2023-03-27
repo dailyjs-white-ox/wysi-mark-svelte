@@ -1,32 +1,39 @@
 <script lang="ts">
-  import { createHtmlElement } from './utils';
+  import { createEventDispatcher } from 'svelte';
+  import { contentTitleFromHast, contentTitleFromHtml } from '../lib/source_helpers';
+  import { slides, slideHasts, type HastContent } from '../lib/source_stores';
 
-  export let slides: string[] = [];
+  const dispatchEvent = createEventDispatcher();
 
-  function contentTitle(htmlSource: string): string {
-    const { body } = createHtmlElement(htmlSource);
-    if (!body) return '';
+  // selected
+  export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
+  let selectedSlideIndexProp: number = 0;
+  $: selectedSlideIndexProp = selected?.[0] ?? 0;
 
-    const headingEl = body.querySelector('h1,h2,h3,h4,h5,h6');
-    if (headingEl !== null) {
-      return headingEl.textContent ?? '';
-    }
-
-    // return first printable line
-    const node = [...body.childNodes].find((node) => node.textContent);
-    if (node) {
-      return node.textContent ?? '';
-    }
-
-    return '';
+  function triggerSelect(slideIndex: string | number) {
+    dispatchEvent('select', [
+      Number(slideIndex),
+      null,
+      {
+        source: 'Contents',
+        timestamp: Date.now(),
+      },
+    ]);
   }
 </script>
 
 <aside>
   <ol>
-    {#each slides as html}
-      {@const title = contentTitle(html)}
-      <li>
+    <!--{#each $slides as html, index}-->
+    <!--{@const title = contentTitleFromHtml(html)}-->
+    {#each $slideHasts as nodeGroup, index}
+      {@const title = contentTitleFromHast(nodeGroup)}
+      <li
+        class:selected={selectedSlideIndexProp === index}
+        tabindex="-1"
+        on:click={() => triggerSelect(index)}
+        on:keydown
+      >
         <span class="title" {title}>{title}</span>
       </li>
     {/each}
@@ -41,6 +48,9 @@
   }
   ol {
     overflow: auto;
+  }
+  li.selected {
+    outline: 2px solid #666;
   }
   .title {
     white-space: nowrap;

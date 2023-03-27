@@ -1,32 +1,30 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
-  import { browser } from '$app/environment';
 
-  import { createHtmlElement } from '../../../routes/utils';
   import { slides, slideHasts } from '../../source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
   const dispatchEvent = createEventDispatcher();
 
   // selected
   export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
-  let selectedSlideIndex: number = 0;
+  let slideIndex: number = 0;
+  $: slideIndex = selected?.[0] ?? 0;
   let selectedNodeIndexTrace: number[] | undefined;
-  $: selectedSlideIndex = selected?.[0] ?? 0;
   $: selectedNodeIndexTrace = selected?.[1];
 
-  let currentSlideIndex = 0;
+  //let currentSlideIndex = 0;
 
-  // update any change selected slide index to currentSlideIndex
-  $: if (selectedSlideIndex !== undefined && selectedSlideIndex !== currentSlideIndex) {
-    //console.log('updating current slide index:', selectedSlideIndex, { currentSlideIndex, ...selected, });
-    currentSlideIndex = selectedSlideIndex;
-  }
+  //// update any change selected slide index to currentSlideIndex
+  //$: if (selectedSlideIndex !== undefined && selectedSlideIndex !== currentSlideIndex) {
+  //  //console.log('updating current slide index:', selectedSlideIndex, { currentSlideIndex, ...selected, });
+  //  currentSlideIndex = selectedSlideIndex;
+  //}
 
   let ref: HTMLElement;
 
-  function triggerSelect(slideIndex: number, indexTrace?: number[]) {
+  function triggerSelect(slideIndex: number | string, indexTrace?: number[]) {
     dispatchEvent('select', [
-      slideIndex,
+      Number(slideIndex),
       indexTrace,
       {
         source: 'Preview',
@@ -36,13 +34,12 @@
   }
 
   // scroll into selected slide
-  $: ((selectedSlideIndex) => {
-    console.log('🚀 ~ file: Preview.svelte:34 ~ selectedSlideIndex:', selectedSlideIndex);
-    const selectedSlide = ref?.querySelector(`.slide-index-${selectedSlideIndex}`);
+  $: ((slideIndex) => {
+    const selectedSlide = ref?.querySelector(`.slide-index-${slideIndex}`);
     if (selectedSlide) {
       selectedSlide.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
-  })(selectedSlideIndex);
+  })(slideIndex);
 </script>
 
 <div class="preview">
@@ -50,32 +47,33 @@
     <input
       type="number"
       name="slide-index"
-      bind:value={currentSlideIndex}
+      value={slideIndex}
       min="0"
       on:change={(ev) => {
         console.log('change', ev);
-        triggerSelect(currentSlideIndex);
+        //triggerSelect(slideIndex);
+        triggerSelect(ev.target.value);
       }}
     />
     <button
       type="button"
       on:click={() => {
-        currentSlideIndex = Math.max(currentSlideIndex - 1, 0);
-        triggerSelect(currentSlideIndex);
+        const nextSlideIndex = Math.max(slideIndex - 1, 0);
+        triggerSelect(nextSlideIndex);
       }}>Prev</button
     >
     <button
       type="button"
       on:click={() => {
-        currentSlideIndex = Math.min(currentSlideIndex + 1, $slides.length - 1);
-        triggerSelect(currentSlideIndex);
+        const nextSlideIndex = Math.min(slideIndex + 1, $slides.length - 1);
+        triggerSelect(nextSlideIndex);
       }}>Next</button
     >
   </header>
 
   <div class="slides-container" bind:this={ref}>
     {#each $slideHasts as nodeGroup, slideIndex}
-      {@const isSelected = slideIndex === selectedSlideIndex}
+      {@const isSelected = slideIndex === slideIndex}
       {@const selectedNodeTrace = selectedNodeIndexTrace}
       <PreviewSlide
         {slideIndex}
@@ -84,7 +82,6 @@
         {selectedNodeTrace}
         on:select={({ detail }) => triggerSelect(slideIndex, detail)}
       />
-      <!--{slideHtml}-->
 
       <hr />
     {/each}

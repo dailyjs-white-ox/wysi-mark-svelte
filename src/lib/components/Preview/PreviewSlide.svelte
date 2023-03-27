@@ -19,9 +19,6 @@
   $: if (isSelected && selectedNodeTrace && ref) {
     const descendantNode = findDomNodeByIndexTrace(ref, selectedNodeTrace);
     if (descendantNode) {
-      console.log('🚀 ~ selected node:', descendantNode, {
-        selectedNodeTrace,
-      });
       ref.querySelectorAll('.selected-node').forEach((el) => {
         el.classList.remove('selected-node');
       });
@@ -31,7 +28,6 @@
         descendantNode.classList.add('selected-node');
       }
     }
-    //selectedSlideEl.scrollIntoView({ behavior: 'smooth', inline: 'center' });
   }
 
   function isElement(node: Node): node is Element {

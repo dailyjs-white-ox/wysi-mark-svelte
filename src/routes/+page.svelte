@@ -50,7 +50,6 @@
   }
 
   function handleSelect({ detail }) {
-    console.log(':select:', detail);
     selected = detail;
     //const [slideIndex, indexTrace, sourceDetail] = detail;
     //selectedSlideIndex = slideIndex;
@@ -94,7 +93,7 @@
     </nav>
     <section class="toc">
       {#if showToc}
-        <ContentsSidebar slides={$slides} />
+        <ContentsSidebar {selected} on:select={handleSelect} />
       {/if}
     </section>
     <section class="editor">
