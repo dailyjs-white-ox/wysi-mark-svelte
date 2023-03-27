@@ -1,20 +1,17 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
-  export let slides: string[];
+  import { createEventDispatcher, onMount } from 'svelte';
+  import { slides } from '$lib/source_stores';
 
   type Direction = 'prev' | 'next';
-  const disappearPosition = -200;
 
   let page = 0;
   let direction: Direction;
   let section: HTMLElement;
+  let slideWidth: number;
 
   const dispatch = createEventDispatcher();
 
-  function handleClickCloseSlide() {
-    dispatch('clickCloseSlide');
-  }
   function handleClickPrevBtn() {
     direction = 'prev';
     page -= 1;
@@ -23,26 +20,26 @@
     direction = 'next';
     page += 1;
   }
+
+  onMount(() => {
+    slideWidth = section.getBoundingClientRect().width;
+  });
 </script>
 
-<div class="slide">
+<div class="presentation">
   <nav class="navigator">
-    <button on:click={handleClickCloseSlide}>close slide</button>
+    <button on:click={() => dispatch('close')}>Exit</button>
     <button on:click={handleClickPrevBtn} disabled={page === 0}>prev page</button>
-    <button on:click={handleClickNextBtn} disabled={page === slides.length - 1}>next page</button>
+    <button on:click={handleClickNextBtn} disabled={page === $slides.length - 1}>next page</button>
   </nav>
   <section class="transition-container" bind:this={section}>
     {#key page}
-      <svelt:fragment
-        in:fly={{
-          x: direction === 'next' ? section.getBoundingClientRect().width : disappearPosition,
-        }}
-        out:fly={{
-          x: direction === 'prev' ? section.getBoundingClientRect().width : disappearPosition,
-        }}
+      <article
+        in:fly={{ x: direction === 'next' ? slideWidth : -slideWidth, duration: 400 }}
+        out:fly={{ x: direction === 'prev' ? slideWidth : -slideWidth, duration: 400 }}
       >
-        {@html slides[page]}
-      </svelt:fragment>
+        {@html $slides[page]}
+      </article>
     {/key}
   </section>
 </div>
@@ -52,7 +49,7 @@
     padding: 8px;
     border-bottom: 1px dashed gray;
   }
-  .slide {
+  .presentation {
     position: absolute;
     left: 0px;
     right: 0px;

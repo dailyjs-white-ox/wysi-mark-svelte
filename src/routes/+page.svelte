@@ -1,15 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-
   import { markdown, slides } from '../lib/source_stores';
   import useSessionStorageSnapshot from './use_session_storage_snapshot';
   import Preview from '../lib/components/Preview/Preview.svelte';
-  import Slide from './Slide.svelte';
+  import Presentation from './Presentation.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import type { Snapshot } from './$types';
 
-  let slideMode = false;
+  let showPresentation = false;
   let showToc = true;
   let showEditor = true;
   let showPreview = true;
@@ -42,18 +41,8 @@
 
   // callbacks
 
-  function handleClickShowSlide() {
-    slideMode = true;
-  }
-  function handleClickCloseSlide() {
-    slideMode = false;
-  }
-
   function handleSelect({ detail }) {
     selected = detail;
-    //const [slideIndex, indexTrace, sourceDetail] = detail;
-    //selectedSlideIndex = slideIndex;
-    //selectedIndexTrace = indexTrace;
   }
 
   let didMount = false;
@@ -71,8 +60,8 @@
   })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
-{#if slideMode}
-  <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides={$slides} />
+{#if showPresentation}
+  <Presentation on:close={() => (showPresentation = false)} />
 {:else}
   <main
     class:hide-toc={!showToc}
@@ -82,7 +71,7 @@
   >
     <nav class="navigator">
       <div>
-        <button on:click={handleClickShowSlide}>Show Slide</button>
+        <button on:click={() => (showPresentation = true)}>Show Presentation</button>
         <button on:click={() => (showToc = !showToc)}>ToC</button>
         <button on:click={() => (showEditor = !showEditor)}>Editor</button>
       </div>
