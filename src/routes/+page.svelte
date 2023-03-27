@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  import { markdown, slides } from '../lib/source_stores';
   import useSessionStorageSnapshot from './use_session_storage_snapshot';
-  import { markdown, html, slides } from '../lib/source_stores';
+  import Preview from '../lib/components/Preview/Preview.svelte';
   import Slide from './Slide.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
-  import Preview from '../lib/components/Preview/Preview.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import type { Snapshot } from './$types';
 
@@ -15,8 +15,8 @@
   let showPreview = true;
   let showProperties = false;
 
-  let selectedSlideIndex = 0;
-  let selectedDescendantIndexList: number[] = [];
+  // [slideIndex, indexTrace, sourceDetail]
+  let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -40,11 +40,21 @@
       key: 'page:source',
     });
 
+  // callbacks
+
   function handleClickShowSlide() {
     slideMode = true;
   }
   function handleClickCloseSlide() {
     slideMode = false;
+  }
+
+  function handleSelect({ detail }) {
+    console.log(':select:', detail);
+    selected = detail;
+    //const [slideIndex, indexTrace, sourceDetail] = detail;
+    //selectedSlideIndex = slideIndex;
+    //selectedIndexTrace = indexTrace;
   }
 
   let didMount = false;
@@ -92,17 +102,11 @@
     </section>
     <section class="preview">
       {#if showPreview}
-        <Preview selected={[selectedSlideIndex, selectedDescendantIndexList]} />
+        <Preview {selected} on:select={handleSelect} />
       {/if}
     </section>
     <section class="properties">
-      <PropertiesSidebar
-        on:select={({ detail: [slideIndex, nodeDescendantIndexList] }) => {
-          console.log('select:', [slideIndex, nodeDescendantIndexList]);
-          selectedSlideIndex = slideIndex;
-          selectedDescendantIndexList = nodeDescendantIndexList;
-        }}
-      />
+      <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
   </main>
 {/if}

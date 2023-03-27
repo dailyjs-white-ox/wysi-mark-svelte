@@ -11,6 +11,8 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { fromHtml } from 'hast-util-from-html'
 import { toMdast } from 'hast-util-to-mdast';
 import { toHtml } from 'hast-util-to-html'
+import { isElement } from 'hast-util-is-element'
+import { filter } from 'unist-util-filter'
 import type { HastRoot, HastNodes, HastContent } from 'mdast-util-to-hast/lib/index.js';
 import type { MdastNode } from 'hast-util-to-mdast/lib/index.js'
 import type { VFile } from 'vfile';
@@ -61,9 +63,7 @@ hast.subscribe(($hast) => {
   markdown.set(markdownSource);
 });
 
-import { filter } from 'unist-util-filter'
-
-export const slideHasts = derived(hast, ($hast) => {
+export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   // normalize children - remove blank text nodes, throughout the tree
   const { children } = filter($hast, null, (node) => {
     if (node.type === 'text' && node.value.trim() === '') {
@@ -72,7 +72,7 @@ export const slideHasts = derived(hast, ($hast) => {
     return true;
   }) as HastRoot;
 
-  // group by hr
+  // group nodes by HR node
   const groups = children.reduce<HastContent[][]>((memo, node) => {
     const lastGroup = memo.at(-1) ?? [];
 
@@ -87,14 +87,32 @@ export const slideHasts = derived(hast, ($hast) => {
 
     return memo;
   }, [[]]);
-
   if (groups.length > 0 && groups[0].length === 0) {
     groups.shift();
   }
 
+  // TODO: assign slide index and node trace
+  groups.forEach((groupNodes, groupIndex) => {
+    assignNodeIndexTrace(groupNodes);
+  });
+
   return groups;
 });
 
+function assignNodeIndexTrace(nodes: HastContent[], ancestorTrace: number[] = []) {
+  nodes.forEach((node, index) => {
+    if (!isElement(node)) return;
+
+    node.properties = node.properties ?? {};
+    node.properties.dataNodeIndexTrace = [...ancestorTrace, index].join('.');
+    //node.properties.className = (node.properties.className ?? []) as string[];
+    //node.properties.className.push(`node-index-${[...ancestorTrace, index].join('.')}`);
+
+    assignNodeIndexTrace(node.children, [...ancestorTrace, index]);
+  })
+}
+
+// FIXME: deprecate me
 export const slides: Readable<string[]> = derived(html, ($html) =>
   $html.split('<hr>').map(text => text.trim()).filter(Boolean)
 );

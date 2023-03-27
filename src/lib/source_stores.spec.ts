@@ -6,7 +6,7 @@ import type { Readable } from 'svelte/store';
 
 import '../spec_helpers';
 
-import { markdown, html, mdast, hast } from './source_stores';
+import { markdown, html, mdast, hast } from '../routes/source_stores';
 
 describe('markdown to html', () => {
 
