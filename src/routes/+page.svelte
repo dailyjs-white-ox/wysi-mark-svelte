@@ -4,7 +4,7 @@
   import remarkRehype from 'remark-rehype';
   import rehypeSanitize from 'rehype-sanitize';
   import rehypeStringify from 'rehype-stringify';
-  import Slide from './Slide.svelte';
+  import Presentation from './Presentation.svelte';
   import type { Snapshot } from './$types';
   import ContentsSidebar from './ContentsSidebar.svelte';
 
@@ -17,18 +17,11 @@
 
   let source = '';
   let previewHtml = '';
-  let slideMode = false;
   let slides: string[] = [];
 
+  let showPresentation = false;
   let showToc = true;
   let showPreview = true;
-
-  function handleClickShowSlide() {
-    slideMode = true;
-  }
-  function handleClickCloseSlide() {
-    slideMode = false;
-  }
 
   async function generatePreview(source: string) {
     return await unified()
@@ -45,17 +38,17 @@
     slides = previewHtml
       .split('<hr>')
       .map((preview) => preview.trim())
-      .filter((str) => Boolean(str));
+      .filter(Boolean);
   })();
 </script>
 
-{#if slideMode}
-  <Slide on:clickCloseSlide={handleClickCloseSlide} bind:slides />
+{#if showPresentation}
+  <Presentation on:close={() => (showPresentation = false)} bind:slides />
 {:else}
   <main class:hide-toc={!showToc} class:hide-preview={!showPreview}>
     <nav class="navigator">
       <div>
-        <button on:click={handleClickShowSlide}>Show Slide</button>
+        <button on:click={() => (showPresentation = true)}>Show Presentation</button>
         <button on:click={() => (showToc = !showToc)}>ToC</button>
       </div>
       <div>
