@@ -2,7 +2,8 @@
   import { createEventDispatcher } from 'svelte';
   import { toText } from 'hast-util-to-text';
 
-  import type { HastContent } from 'mdast-util-to-hast/lib/state';
+  import type { HastContent, HastNodes } from 'mdast-util-to-hast/lib/state';
+  import { markdown } from '$lib/source_stores';
 
   const dispatchEvent = createEventDispatcher();
 
@@ -12,7 +13,16 @@
 
   // ui states
 
-  $: nodesOpen = hastNodes.map(() => false);
+  let nodesOpen: boolean[];
+  $: {
+    if (hastNodes) {
+      if (!nodesOpen) {
+        nodesOpen = hastNodes.map(() => false);
+      } else if (nodesOpen.length !== hastNodes.length) {
+        nodesOpen = hastNodes.map(() => false);
+      }
+    }
+  }
 
   //
   $: {
@@ -37,6 +47,41 @@
   function triggerSelect(nodeIndex: number | number[]) {
     const indexes = Array.isArray(nodeIndex) ? nodeIndex : [nodeIndex];
     dispatchEvent('select', indexes);
+  }
+
+  function onInputText(ev: InputEvent, node: HastContent) {
+    console.log('🚀 ~ file: NestedHastElementList.svelte:47 ~ onInputText:', ev, node);
+    const {
+      position: { start, end },
+    } = node;
+
+    // node.value = ev.target.value;
+    // start.offset
+    // end.offset
+
+    // `abc` => abc
+    // TODO: add test here, or whatever.
+    if (node.value.length === end.offset - start.offset - 2) {
+      end.offset -= 1;
+      start.offset += 1;
+    }
+
+    const value = ev.target.value || '.';
+
+    const newSource = $markdown.slice(0, start.offset) + value + $markdown.slice(end.offset);
+    console.log(
+      '🚀 ~ file: NestedHastElementList.svelte:65 ~ onInputText ~ newSource:',
+      JSON.stringify(newSource),
+      {
+        value,
+        start,
+        end,
+        '±10': $markdown.slice(start.offset - 10, end.offset + 10),
+        node,
+      }
+    );
+
+    $markdown = newSource;
   }
 </script>
 
@@ -66,7 +111,7 @@
               {nodesOpen[index] ? '-' : '+'}
             </button>
           {:else if node.type === 'text'}
-            <textarea value={node.value} />
+            <textarea value={node.value} on:input={(ev) => onInputText(ev, node)} />
           {/if}
         </div>
 

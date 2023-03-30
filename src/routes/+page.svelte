@@ -86,7 +86,10 @@
       {/if}
     </section>
     <section class="editor">
+      <!-- <form> -->
       <textarea bind:value={$markdown} />
+      <!-- <div class="buttons"> <button type="submit">Update</button> </div> -->
+      <!-- </form> -->
     </section>
     <section class="preview">
       {#if showPreview}
@@ -152,6 +155,15 @@
   }
 
   /* --- */
+  .editor form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .editor .buttons {
+    display: flex;
+    justify-content: flex-end;
+  }
 
   textarea {
     height: 100%;
