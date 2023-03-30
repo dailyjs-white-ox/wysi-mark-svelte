@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
-  export let slides: string[];
+  import { slides } from '$lib/source_stores';
 
   type Direction = 'prev' | 'next';
 
@@ -30,7 +30,7 @@
   <nav class="navigator">
     <button on:click={() => dispatch('close')}>Exit</button>
     <button on:click={handleClickPrevBtn} disabled={page === 0}>prev page</button>
-    <button on:click={handleClickNextBtn} disabled={page === slides.length - 1}>next page</button>
+    <button on:click={handleClickNextBtn} disabled={page === $slides.length - 1}>next page</button>
   </nav>
   <section class="transition-container" bind:this={section}>
     {#key page}
@@ -38,7 +38,7 @@
         in:fly={{ x: direction === 'next' ? slideWidth : -slideWidth, duration: 400 }}
         out:fly={{ x: direction === 'prev' ? slideWidth : -slideWidth, duration: 400 }}
       >
-        {@html slides[page]}
+        {@html $slides[page]}
       </article>
     {/key}
   </section>

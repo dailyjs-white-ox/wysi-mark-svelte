@@ -1,74 +1,100 @@
 <script lang="ts">
-  import { unified } from 'unified';
-  import remarkParse from 'remark-parse';
-  import remarkRehype from 'remark-rehype';
-  import rehypeSanitize from 'rehype-sanitize';
-  import rehypeStringify from 'rehype-stringify';
+  import { onMount } from 'svelte';
+  import { markdown, slides } from '$lib/source_stores';
+  import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
+  import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
-  import type { Snapshot } from './$types';
   import ContentsSidebar from './ContentsSidebar.svelte';
-
-  export const snapshot: Snapshot<string> = {
-    capture: () => source,
-    restore: (snapshot: any) => {
-      source = snapshot;
-    },
-  };
-
-  let source = '';
-  let previewHtml = '';
-  let slides: string[] = [];
+  import PropertiesSidebar from './PropertiesSidebar.svelte';
+  import type { Snapshot } from './$types';
 
   let showPresentation = false;
   let showToc = true;
+  let showEditor = true;
   let showPreview = true;
+  let showProperties = false;
 
-  async function generatePreview(source: string) {
-    return await unified()
-      .use(remarkParse)
-      .use(remarkRehype)
-      .use(rehypeSanitize)
-      .use(rehypeStringify)
-      .process(source);
+  // [slideIndex, indexTrace, sourceDetail]
+  let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
+
+  export const snapshot: Snapshot = {
+    capture: () => ({
+      markdown: $markdown,
+      showToc,
+      showEditor,
+      showProperties,
+      showPreview,
+    }),
+    restore: (state) => {
+      $markdown = state.markdown;
+      showToc = state.showToc;
+      showEditor = state.showEditor;
+      showProperties = state.showProperties;
+      showPreview = state.showPreview;
+    },
+  };
+  const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
+    useSessionStorageSnapshot({
+      ...snapshot,
+      key: 'page:source',
+    });
+
+  // callbacks
+
+  function handleSelect({ detail }) {
+    selected = detail;
   }
 
-  $: (async function () {
-    const preview = await generatePreview(source);
-    previewHtml = preview.value.toString();
-    slides = previewHtml
-      .split('<hr>')
-      .map((preview) => preview.trim())
-      .filter(Boolean);
-  })();
+  let didMount = false;
+  onMount(() => {
+    const restoredValue = restoreSessionStorageSnapshot();
+    console.log('🚀 restoredValue:', restoredValue);
+    didMount = true;
+  });
+  // run this after mount
+  $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties) => {
+    if (!didMount) return;
+
+    const capturedValue = captureSessionStorageSnapshot();
+    console.log('🚀 capturedValue:', capturedValue);
+  })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
 {#if showPresentation}
-  <Presentation on:close={() => (showPresentation = false)} bind:slides />
+  <Presentation on:close={() => (showPresentation = false)} />
 {:else}
-  <main class:hide-toc={!showToc} class:hide-preview={!showPreview}>
+  <main
+    class:hide-toc={!showToc}
+    class:hide-editor={!showEditor}
+    class:hide-preview={!showPreview}
+    class:hide-properties={!showProperties}
+  >
     <nav class="navigator">
       <div>
         <button on:click={() => (showPresentation = true)}>Show Presentation</button>
         <button on:click={() => (showToc = !showToc)}>ToC</button>
+        <button on:click={() => (showEditor = !showEditor)}>Editor</button>
       </div>
       <div>
         <button on:click={() => (showPreview = !showPreview)}>Preview</button>
+        <button on:click={() => (showProperties = !showProperties)}>Properties</button>
       </div>
     </nav>
     <section class="toc">
       {#if showToc}
-        <ContentsSidebar {slides} />
+        <ContentsSidebar {selected} on:select={handleSelect} />
       {/if}
     </section>
     <section class="editor">
-      <textarea bind:value={source} />
+      <textarea bind:value={$markdown} />
     </section>
     <section class="preview">
       {#if showPreview}
-        <article>
-          {@html previewHtml}
-        </article>
+        <Preview {selected} on:select={handleSelect} />
       {/if}
+    </section>
+    <section class="properties">
+      <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
   </main>
 {/if}
@@ -88,13 +114,16 @@
     display: grid;
     grid-template-rows: 50px 1fr;
     grid-template-columns:
-      var(--toc-width, 200px) minmax(0, 1fr) var(--preview-width, minmax(0, 1fr))
-      0;
+      var(--toc-width, 200px)
+      var(--editor-width, minmax(0, 1fr))
+      var(--preview-width, minmax(0, 1fr))
+      var(--properties-width, 200px);
   }
   .navigator {
     grid-area: 1 / 1 / 2 / -1;
     display: flex;
     justify-content: space-between;
+    padding: 0 4px;
   }
   .toc {
     grid-area: 2 / 1 / 3 / 2;
@@ -103,14 +132,23 @@
     grid-area: 2 / 2 / 3 / 3;
   }
   .preview {
-    grid-area: 2 / 3 / 3 / 5;
+    grid-area: 2 / 3 / 3 / 4;
+  }
+  .properties {
+    grid-area: 2 / 4 / 3 / 5;
   }
 
   main.hide-toc {
     --toc-width: 0;
   }
+  main.hide-editor {
+    --editor-width: 0;
+  }
   main.hide-preview {
     --preview-width: 0;
+  }
+  main.hide-properties {
+    --properties-width: 0;
   }
 
   /* --- */
