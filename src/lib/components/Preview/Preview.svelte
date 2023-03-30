@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
 
-  import { slides, slideHasts } from '../../source_stores';
+  import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
   const dispatchEvent = createEventDispatcher();
 
@@ -72,15 +72,15 @@
   </header>
 
   <div class="slides-container" bind:this={ref}>
-    {#each $slideHasts as nodeGroup, slideIndex}
-      {@const isSelected = slideIndex === slideIndex}
+    {#each $slideHasts as nodeGroup, index}
+      {@const isSelected = index === slideIndex}
       {@const selectedNodeTrace = selectedNodeIndexTrace}
       <PreviewSlide
-        {slideIndex}
+        slideIndex={index}
         hastNodes={nodeGroup}
         {isSelected}
         {selectedNodeTrace}
-        on:select={({ detail }) => triggerSelect(slideIndex, detail)}
+        on:select={({ detail }) => triggerSelect(index, detail)}
       />
 
       <hr />
@@ -99,6 +99,7 @@
   .slides-container {
     display: flex;
     flex-direction: row;
+    align-items: flex-start;
     gap: 8px;
 
     padding: 20px;

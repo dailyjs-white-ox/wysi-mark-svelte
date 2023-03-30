@@ -1,9 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  import { slideHasts } from '../lib/source_stores';
-  //import NestedNodeList from '../lib/components/NestedNodeList.svelte';
-  import NestedHastElementList from '../lib/components/NestedHastElementList.svelte';
+  import { slideHasts } from '$lib/source_stores';
+  //import NestedNodeList from '$lib/components/NestedNodeList.svelte';
+  import NestedHastElementList from '$lib/components/NestedHastElementList.svelte';
   import type { HastContent } from 'mdast-util-to-hast/lib/state';
 
   const dispatchEvent = createEventDispatcher();

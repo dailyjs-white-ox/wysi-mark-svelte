@@ -1,5 +1,5 @@
-import { createHtmlElement } from "../utils/html";
 import { toText } from 'hast-util-to-text';
+import { createHtmlElement } from "$lib/utils/html";
 import type { HastContent } from "./source_stores";
 
 export function contentTitleFromHtml(htmlSource: string): string {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { contentTitleFromHast, contentTitleFromHtml } from '../lib/source_helpers';
-  import { slides, slideHasts, type HastContent } from '../lib/source_stores';
+  import { contentTitleFromHast, contentTitleFromHtml } from '$lib/source_helpers';
+  import { slideHasts, type HastContent } from '$lib/source_stores';
 
   const dispatchEvent = createEventDispatcher();
 
@@ -47,6 +47,7 @@
     border-right: 1px solid black;
   }
   ol {
+    margin: 0;
     overflow: auto;
   }
   li.selected {

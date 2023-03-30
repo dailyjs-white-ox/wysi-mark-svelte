@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { markdown, slides } from '../lib/source_stores';
-  import useSessionStorageSnapshot from './use_session_storage_snapshot';
-  import Preview from '../lib/components/Preview/Preview.svelte';
+  import { markdown, slides } from '$lib/source_stores';
+  import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
+  import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';

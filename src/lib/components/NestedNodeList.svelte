@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { normalizeChildNodes } from '../source_stores';
+  import { normalizeChildNodes } from '$lib/source_stores';
 
   const dispatchEvent = createEventDispatcher();
 

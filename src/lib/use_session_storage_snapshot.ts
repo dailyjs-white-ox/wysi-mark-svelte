@@ -14,7 +14,7 @@ export default function useSessionStorageSnapshot<T>(snapshotToSessionStorage: S
 
   function restoreSessionStorageSnapshot() {
     if (typeof sessionStorage == 'undefined') return;
-    const value = JSON.parse(sessionStorage[key]);
+    const value = JSON.parse(sessionStorage[key] ?? '{}');
     restore(value);
     return value;
   }

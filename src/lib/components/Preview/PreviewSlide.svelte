@@ -66,6 +66,7 @@
     overflow-y: auto;
     min-width: calc(100% - 40px);
     background-color: white;
+    aspect-ratio: 4 / 3;
   }
   article.selected-slide {
     outline: 2px solid #666;
