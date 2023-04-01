@@ -24,7 +24,6 @@
     }
   }
 
-  //
   $: {
     if (selectedNodeIndexTrace && selectedNodeIndexTrace.length > 0) {
       nodesOpen[selectedNodeIndexTrace[0]] = true;
@@ -50,14 +49,9 @@
   }
 
   function onInputText(ev: InputEvent, node: HastContent) {
-    console.log('🚀 ~ file: NestedHastElementList.svelte:47 ~ onInputText:', ev, node);
     const {
       position: { start, end },
     } = node;
-
-    // node.value = ev.target.value;
-    // start.offset
-    // end.offset
 
     // `abc` => abc
     // TODO: add test here, or whatever.
@@ -69,18 +63,6 @@
     const value = ev.target.value || '.';
 
     const newSource = $markdown.slice(0, start.offset) + value + $markdown.slice(end.offset);
-    console.log(
-      '🚀 ~ file: NestedHastElementList.svelte:65 ~ onInputText ~ newSource:',
-      JSON.stringify(newSource),
-      {
-        value,
-        start,
-        end,
-        '±10': $markdown.slice(start.offset - 10, end.offset + 10),
-        node,
-      }
-    );
-
     $markdown = newSource;
   }
 </script>

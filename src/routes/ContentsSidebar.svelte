@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { contentTitleFromHast, contentTitleFromHtml } from '$lib/source_helpers';
-  import { slideHasts, type HastContent } from '$lib/source_stores';
+  import { contentTitleFromHast } from '$lib/source_helpers';
+  import { slideHasts } from '$lib/source_stores';
 
   const dispatchEvent = createEventDispatcher();
 
@@ -24,8 +24,6 @@
 
 <aside>
   <ol>
-    <!--{#each $slides as html, index}-->
-    <!--{@const title = contentTitleFromHtml(html)}-->
     {#each $slideHasts as nodeGroup, index}
       {@const title = contentTitleFromHast(nodeGroup)}
       <li

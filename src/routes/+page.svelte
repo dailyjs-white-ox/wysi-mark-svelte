@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { markdown, slides } from '$lib/source_stores';
+  import { markdown } from '$lib/source_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
@@ -14,7 +14,6 @@
   let showPreview = true;
   let showProperties = false;
 
-  // [slideIndex, indexTrace, sourceDetail]
   let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
 
   export const snapshot: Snapshot = {
@@ -31,6 +30,11 @@
       showEditor = state.showEditor;
       showProperties = state.showProperties;
       showPreview = state.showPreview;
+      // $markdown = state.markdown ?? '';
+      // showToc = state.showToc ?? showToc;
+      // showEditor = state.showEditor ?? showEditor;
+      // showProperties = state.showProperties ?? showProperties;
+      // showPreview = state.showPreview ?? showPreview;
     },
   };
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
@@ -39,8 +43,6 @@
       key: 'page:source',
     });
 
-  // callbacks
-
   function handleSelect({ detail }) {
     selected = detail;
   }
@@ -48,7 +50,6 @@
   let didMount = false;
   onMount(() => {
     const restoredValue = restoreSessionStorageSnapshot();
-    console.log('🚀 restoredValue:', restoredValue);
     didMount = true;
   });
   // run this after mount
@@ -56,7 +57,6 @@
     if (!didMount) return;
 
     const capturedValue = captureSessionStorageSnapshot();
-    console.log('🚀 capturedValue:', capturedValue);
   })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
@@ -86,10 +86,7 @@
       {/if}
     </section>
     <section class="editor">
-      <!-- <form> -->
       <textarea bind:value={$markdown} />
-      <!-- <div class="buttons"> <button type="submit">Update</button> </div> -->
-      <!-- </form> -->
     </section>
     <section class="preview">
       {#if showPreview}
