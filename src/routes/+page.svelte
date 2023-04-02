@@ -7,7 +7,7 @@
   import ContentsSidebar from './ContentsSidebar.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import Textarea from '$lib/components/Editor/Textarea.svelte';
-  import CodeMirror5 from '$lib/components/Editor/CodeMirror5/CodeMirror5.svelte';
+  import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
   import type { Snapshot } from './$types';
 
   let showPresentation = false;
@@ -89,7 +89,7 @@
     </section>
     <section class="editor">
       <!-- <Textarea bind:value={$markdown} /> -->
-      <CodeMirror5 bind:value={$markdown} />
+      <CodeMirror5Editor {selected} bind:value={$markdown} />
     </section>
     <section class="preview">
       {#if showPreview}

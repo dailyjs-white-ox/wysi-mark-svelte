@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
   import { writable } from 'svelte/store';
 
@@ -11,8 +11,10 @@
   export let tab = true;
   export let theme = 'svelte';
 
-  let w;
-  let h;
+  export let editor;
+
+  let w: number;
+  let h: number;
   let mode = 'md';
 
   // We have to expose set and update methods, rather
@@ -84,11 +86,11 @@
     md: { name: 'markdown' },
   };
 
-  const refs = {};
-  let editor;
+  const refs: { [key: string]: HTMLElement } = {};
+
+  let CodeMirror;
   let updating_externally = false;
   let destroyed = false;
-  let CodeMirror;
 
   $: if (editor && w && h) {
     editor.refresh();
@@ -183,7 +185,7 @@
     __first = false;
   }
 
-  function sleep(ms) {
+  function sleep(ms: number) {
     return new Promise((fulfil) => setTimeout(fulfil, ms));
   }
 </script>

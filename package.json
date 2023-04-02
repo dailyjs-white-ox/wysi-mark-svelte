@@ -14,6 +14,7 @@
 		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"dependencies": {
+		"@types/codemirror": "^5.60.7",
 		"@types/hast": "^2.3.4",
 		"@types/mdast": "^3.0.11",
 		"codemirror": "^5",
