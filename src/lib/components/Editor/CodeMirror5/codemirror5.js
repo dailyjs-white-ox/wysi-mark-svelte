@@ -1,5 +1,6 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
+//import './base.css';
 import './theme.css';
 import './tokens.css';
 

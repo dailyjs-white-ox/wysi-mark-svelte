@@ -1,3 +1,8 @@
+
+.cm-s-svelte {
+	--highlight: #ffff82;
+}
+
 .cm-s-svelte.CodeMirror {
 	background: transparent;
 	color: var(--sk-code-base);
