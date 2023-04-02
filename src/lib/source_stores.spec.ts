@@ -94,7 +94,7 @@ describe('markdown to html', () => {
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
 
-    it('MAY work with get(html) because of being async', async () => {
+    it('should work with get(html)', async () => {
       markdown.set('a *markdown* text');
 
       //await tick();
@@ -106,8 +106,9 @@ describe('markdown to html', () => {
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
 
-    it('should render inline html', () => {
-      markdown.set(`Outside div
+    describe('inline html', () => {
+      it('should render inline html', () => {
+        markdown.set(`Outside div
 
 <div>
 
@@ -116,14 +117,14 @@ a *markdown* inside div
 </div>
       `);
 
-      const $html = get(html);
-      expect($html.replaceAll('\n', '')).toEqual(
-        '<p>Outside div</p><div style="border: 1px solid red;"><p>a <em>markdown</em> inside div</p></div>'
-      );
-    });
+        const $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual(
+          '<p>Outside div</p><div><p>a <em>markdown</em> inside div</p></div>'
+        );
+      });
 
-    it('should not allow dangerous tags and attributes', () => {
-      markdown.set(`Outside div
+      it('should not allow dangerous tags and attributes', () => {
+        markdown.set(`Outside div
 
 <script>
 console.log('Hello world');
@@ -133,12 +134,12 @@ console.log('Hello world');
 
       `);
 
-      const $html = get(html);
-      expect($html.replaceAll('\n', '')).toEqual('<p>Outside div</p><p><a href="">link</a></p>');
-    });
+        const $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual('<p>Outside div</p><p><a href="">link</a></p>');
+      });
 
-    it.only('should allow class and style in particular', () => {
-      markdown.set(`Outside div
+      it('should allow class and style in particular', () => {
+        markdown.set(`Outside div
 
 <div style="border: 1px solid red;">
 
@@ -150,14 +151,39 @@ a *markdown* inside div
 
       `);
 
-      const $html = get(html);
-      expect($html.replaceAll('\n', '')).toEqual(
-        [
-          '<p>Outside div</p>',
-          '<div style="border: 1px solid red;"><p>a <em>markdown</em> inside div</p></div>',
-          '<h2 class="m-0">heading without margin</h2>',
-        ].join('')
-      );
+        const $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual(
+          [
+            '<p>Outside div</p>',
+            '<div style="border: 1px solid red;"><p>a <em>markdown</em> inside div</p></div>',
+            '<h2 class="m-0">heading without margin</h2>',
+          ].join('')
+        );
+      });
+
+      it('should preserve previous value if parse failed', () => {
+        markdown.set(`
+a *markdown* text
+
+<div>some text</div>
+      `);
+        let $html = get(html);
+        const expected1 = ['<p>a <em>markdown</em> text</p>', '<div>some text</div>'].join('');
+        expect($html.replaceAll('\n', '')).toEqual(expected1);
+
+        // set to brokent html
+
+        markdown.set(`
+<div
+
+a *markdown* text
+
+<div>some text</div>
+      `);
+
+        $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual(expected1);
+      });
     });
   });
 });

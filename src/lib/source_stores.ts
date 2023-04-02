@@ -1,4 +1,4 @@
-import { writable, derived, type Readable } from 'svelte/store';
+import { writable, derived, get, type Readable } from 'svelte/store';
 
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
@@ -12,33 +12,56 @@ import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
 import { filter } from 'unist-util-filter';
-import type { HastRoot, HastNodes, HastContent } from 'mdast-util-to-hast/lib/index.js';
+import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
 import type { VFile } from 'vfile';
 
 export type { HastNodes, HastContent };
 
-// see node_modules/hast-util-sanitize/lib/schema.js for details
+// see ../../node_modules/hast-util-sanitize/lib/schema.js for details
 const sanitizeSchema = structuredClone({
   ...defaultSchema,
-  attributes: { '*': [...(defaultSchema.attributes ?? {}).div, 'className', 'style'] },
+  tagNames: [...(defaultSchema.tagNames ?? []), 'header', 'footer'],
+  attributes: {
+    ...defaultSchema.attributes,
+    '*': [...(defaultSchema.attributes ?? {}).div, 'className', 'style'],
+  },
 });
+
+function turnMdastToSanitizedHast(mdastTree: MdastRoot): HastNodes {
+  const hastTree0 = toHast(mdastTree, { allowDangerousHtml: true });
+  if (!hastTree0) {
+    throw new Error('hast tree is null');
+  }
+  // return hastTree0;
+  if (hastTree0.children?.length > 0) {
+    console.log('turning raw:');
+    console.dir(hastTree0, { depth: null });
+  }
+
+  const hastTree1 = raw(hastTree0);
+
+  console.log('done.');
+  console.dir({ hastTree1 }, { depth: null });
+
+  const hastTree2 = sanitize(hastTree1, sanitizeSchema);
+  return hastTree2;
+}
 
 // markdown-driven
 
 export const markdown = writable('');
 
 export const hast = (() => {
-  const store = derived(markdown, ($markdown) => {
+  const store: Readable<HastNodes> = derived(markdown, ($markdown) => {
     const mdastTree = fromMarkdown($markdown);
-    // mdast => hast
-    const hastTree0 = toHast(mdastTree, { allowDangerousHtml: true });
-    if (!hastTree0) {
-      throw new Error('hast tree is null');
+    try {
+      const hastTree = turnMdastToSanitizedHast(mdastTree);
+      return hastTree;
+    } catch (err) {
+      console.error(err);
+      // return current value instead
+      return get(store);
     }
-    // return hastTree0;
-    const hastTree1 = raw(hastTree0);
-    const hastTree2 = sanitize(hastTree1, sanitizeSchema);
-    return hastTree2;
   });
 
   return store;
