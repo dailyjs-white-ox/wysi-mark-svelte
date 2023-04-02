@@ -6,6 +6,7 @@
   import Presentation from './Presentation.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';
+  import Textarea from '$lib/components/Editor/Textarea.svelte';
   import type { Snapshot } from './$types';
 
   let showPresentation = false;
@@ -86,7 +87,7 @@
       {/if}
     </section>
     <section class="editor">
-      <textarea bind:value={$markdown} />
+      <Textarea bind:value={$markdown} />
     </section>
     <section class="preview">
       {#if showPreview}
@@ -160,11 +161,5 @@
   .editor .buttons {
     display: flex;
     justify-content: flex-end;
-  }
-
-  textarea {
-    height: 100%;
-    width: 95%;
-    margin: 0px 10px;
   }
 </style>
