@@ -32,16 +32,8 @@ function turnMdastToSanitizedHast(mdastTree: MdastRoot): HastNodes {
   if (!hastTree0) {
     throw new Error('hast tree is null');
   }
-  // return hastTree0;
-  if (hastTree0.children?.length > 0) {
-    console.log('turning raw:');
-    console.dir(hastTree0, { depth: null });
-  }
 
   const hastTree1 = raw(hastTree0);
-
-  console.log('done.');
-  console.dir({ hastTree1 }, { depth: null });
 
   const hastTree2 = sanitize(hastTree1, sanitizeSchema);
   return hastTree2;
