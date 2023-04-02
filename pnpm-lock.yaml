@@ -7,6 +7,9 @@ dependencies:
   '@types/mdast':
     specifier: ^3.0.11
     version: 3.0.11
+  codemirror:
+    specifier: ^5
+    version: 5.65.12
   hast-util-from-html:
     specifier: ^1.0.1
     version: 1.0.1
@@ -851,6 +854,10 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  /codemirror@5.65.12:
+    resolution: {integrity: sha512-z2jlHBocElRnPYysN2HAuhXbO3DNB0bcSKmNz3hcWR2Js2Dkhc1bEOxG93Z3DeUrnm+qx56XOY5wQmbP5KY0sw==}
+    dev: false
 
   /color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}

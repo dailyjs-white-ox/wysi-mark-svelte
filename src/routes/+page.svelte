@@ -7,6 +7,7 @@
   import ContentsSidebar from './ContentsSidebar.svelte';
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import Textarea from '$lib/components/Editor/Textarea.svelte';
+  import CodeMirror5 from '$lib/components/Editor/CodeMirror5/CodeMirror5.svelte';
   import type { Snapshot } from './$types';
 
   let showPresentation = false;
@@ -87,7 +88,8 @@
       {/if}
     </section>
     <section class="editor">
-      <Textarea bind:value={$markdown} />
+      <!-- <Textarea bind:value={$markdown} /> -->
+      <CodeMirror5 bind:value={$markdown} />
     </section>
     <section class="preview">
       {#if showPreview}
@@ -125,6 +127,9 @@
     display: flex;
     justify-content: space-between;
     padding: 0 4px;
+    /* style */
+    background-color: #676778;
+    color: white;
   }
   .toc {
     grid-area: 2 / 1 / 3 / 2;
