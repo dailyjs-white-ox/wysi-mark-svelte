@@ -23,7 +23,11 @@ export const hast = (() => {
   const store = derived(markdown, ($markdown) => {
     console.log($markdown);
     const mdastTree = fromMarkdown($markdown);
-    const hastTree = toHast(mdastTree);
+    console.log('🚀 mdastTree:');
+    console.dir(mdastTree, { depth: null });
+    const hastTree = toHast(mdastTree, { allowDangerousHtml: true });
+    console.log('🚀 hastTree:');
+    console.dir(hastTree, { depth: null });
     if (!hastTree) {
       throw new Error('hastTree is null');
     }
@@ -33,7 +37,7 @@ export const hast = (() => {
   return store;
 })();
 
-export const html = derived(hast, ($hast) => toHtml($hast));
+export const html = derived(hast, ($hast) => toHtml($hast, { allowDangerousHtml: true }));
 
 export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   // normalize children - remove blank text nodes, throughout the tree

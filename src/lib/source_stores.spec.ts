@@ -105,6 +105,21 @@ describe('markdown to html', () => {
 
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
+
+    it('should render inline html', () => {
+      markdown.set(`Outside div
+
+<div>
+
+a *markdown* inside div
+
+</div>`);
+
+      const $html = get(html);
+      expect($html.replaceAll('\n', '')).toEqual(
+        '<p>Outside div</p><div><p>a <em>markdown</em> inside div</p></div>'
+      );
+    });
   });
 });
 
