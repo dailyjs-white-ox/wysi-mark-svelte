@@ -120,6 +120,21 @@ a *markdown* inside div
         '<p>Outside div</p><div><p>a <em>markdown</em> inside div</p></div>'
       );
     });
+
+    it('should not allow dangerous tags and attributes', () => {
+      markdown.set(`Outside div
+
+<script>
+console.log('Hello world');
+</script>
+
+<a href="" onClick="alert('Hi!')">link</a>
+
+`);
+
+      const $html = get(html);
+      expect($html.replaceAll('\n', '')).toEqual('<p>Outside div</p><p><a href="">link</a></p>');
+    });
   });
 });
 

@@ -7,6 +7,8 @@ import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toHast } from 'mdast-util-to-hast';
+import { sanitize } from 'hast-util-sanitize';
+import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
 import { filter } from 'unist-util-filter';
@@ -21,17 +23,15 @@ export const markdown = writable('');
 
 export const hast = (() => {
   const store = derived(markdown, ($markdown) => {
-    console.log($markdown);
     const mdastTree = fromMarkdown($markdown);
-    console.log('🚀 mdastTree:');
-    console.dir(mdastTree, { depth: null });
-    const hastTree = toHast(mdastTree, { allowDangerousHtml: true });
-    console.log('🚀 hastTree:');
-    console.dir(hastTree, { depth: null });
-    if (!hastTree) {
-      throw new Error('hastTree is null');
+    // mdast => hast
+    const hastTree0 = toHast(mdastTree, { allowDangerousHtml: true });
+    if (!hastTree0) {
+      throw new Error('hast tree is null');
     }
-    return hastTree;
+    const hastTree1 = raw(hastTree0);
+    const hastTree2 = sanitize(hastTree1);
+    return hastTree2;
   });
 
   return store;
