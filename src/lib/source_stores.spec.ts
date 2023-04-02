@@ -113,11 +113,12 @@ describe('markdown to html', () => {
 
 a *markdown* inside div
 
-</div>`);
+</div>
+      `);
 
       const $html = get(html);
       expect($html.replaceAll('\n', '')).toEqual(
-        '<p>Outside div</p><div><p>a <em>markdown</em> inside div</p></div>'
+        '<p>Outside div</p><div style="border: 1px solid red;"><p>a <em>markdown</em> inside div</p></div>'
       );
     });
 
@@ -130,10 +131,33 @@ console.log('Hello world');
 
 <a href="" onClick="alert('Hi!')">link</a>
 
-`);
+      `);
 
       const $html = get(html);
       expect($html.replaceAll('\n', '')).toEqual('<p>Outside div</p><p><a href="">link</a></p>');
+    });
+
+    it.only('should allow class and style in particular', () => {
+      markdown.set(`Outside div
+
+<div style="border: 1px solid red;">
+
+a *markdown* inside div
+
+</div>
+
+<h2 class="m-0">heading without margin</h2>
+
+      `);
+
+      const $html = get(html);
+      expect($html.replaceAll('\n', '')).toEqual(
+        [
+          '<p>Outside div</p>',
+          '<div style="border: 1px solid red;"><p>a <em>markdown</em> inside div</p></div>',
+          '<h2 class="m-0">heading without margin</h2>',
+        ].join('')
+      );
     });
   });
 });

@@ -7,7 +7,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toHast } from 'mdast-util-to-hast';
-import { sanitize } from 'hast-util-sanitize';
+import { sanitize, defaultSchema } from 'hast-util-sanitize';
 import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
@@ -16,6 +16,12 @@ import type { HastRoot, HastNodes, HastContent } from 'mdast-util-to-hast/lib/in
 import type { VFile } from 'vfile';
 
 export type { HastNodes, HastContent };
+
+// see node_modules/hast-util-sanitize/lib/schema.js for details
+const sanitizeSchema = structuredClone({
+  ...defaultSchema,
+  attributes: { '*': [...(defaultSchema.attributes ?? {}).div, 'className', 'style'] },
+});
 
 // markdown-driven
 
@@ -29,8 +35,9 @@ export const hast = (() => {
     if (!hastTree0) {
       throw new Error('hast tree is null');
     }
+    // return hastTree0;
     const hastTree1 = raw(hastTree0);
-    const hastTree2 = sanitize(hastTree1);
+    const hastTree2 = sanitize(hastTree1, sanitizeSchema);
     return hastTree2;
   });
 
