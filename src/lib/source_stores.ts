@@ -1,4 +1,4 @@
-import { writable, derived, type Readable } from 'svelte/store';
+import { writable, derived, get, type Readable } from 'svelte/store';
 
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
@@ -7,33 +7,59 @@ import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toHast } from 'mdast-util-to-hast';
+import { sanitize, defaultSchema } from 'hast-util-sanitize';
+import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
 import { filter } from 'unist-util-filter';
-import type { HastRoot, HastNodes, HastContent } from 'mdast-util-to-hast/lib/index.js';
+import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
 import type { VFile } from 'vfile';
 
 export type { HastNodes, HastContent };
+
+// see ../../node_modules/hast-util-sanitize/lib/schema.js for details
+const sanitizeSchema = structuredClone({
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), 'header', 'footer'],
+  attributes: {
+    ...defaultSchema.attributes,
+    '*': [...(defaultSchema.attributes ?? {}).div, 'className', 'style'],
+  },
+});
+
+function turnMdastToSanitizedHast(mdastTree: MdastRoot): HastNodes {
+  const hastTree0 = toHast(mdastTree, { allowDangerousHtml: true });
+  if (!hastTree0) {
+    throw new Error('hast tree is null');
+  }
+
+  const hastTree1 = raw(hastTree0);
+
+  const hastTree2 = sanitize(hastTree1, sanitizeSchema);
+  return hastTree2;
+}
 
 // markdown-driven
 
 export const markdown = writable('');
 
 export const hast = (() => {
-  const store = derived(markdown, ($markdown) => {
-    console.log($markdown);
+  const store: Readable<HastNodes> = derived(markdown, ($markdown) => {
     const mdastTree = fromMarkdown($markdown);
-    const hastTree = toHast(mdastTree);
-    if (!hastTree) {
-      throw new Error('hastTree is null');
+    try {
+      const hastTree = turnMdastToSanitizedHast(mdastTree);
+      return hastTree;
+    } catch (err) {
+      console.error(err);
+      // return current value instead
+      return get(store);
     }
-    return hastTree;
   });
 
   return store;
 })();
 
-export const html = derived(hast, ($hast) => toHtml($hast));
+export const html = derived(hast, ($hast) => toHtml($hast, { allowDangerousHtml: true }));
 
 export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   // normalize children - remove blank text nodes, throughout the tree

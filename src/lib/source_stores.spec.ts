@@ -1,15 +1,8 @@
-import { describe, it, beforeEach, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-import { tick } from 'svelte';
-import { get, writable } from 'svelte/store';
-import type { Readable } from 'svelte/store';
+import { get } from 'svelte/store';
 
-import {
-  markdown,
-  html,
-  // mdast,
-  hast,
-} from './source_stores';
+import { markdown, html, hast } from './source_stores';
 
 describe('markdown to html', () => {
   describe.skip('mdast', () => {
@@ -24,7 +17,6 @@ describe('markdown to html', () => {
       //await tick();
       // requires async not because of how stores work, but how remark works.
       await delayAsync(10);
-      //console.log("🚀 $mdast:", JSON.stringify($mdast, null, 2))
 
       expect($mdast).toBeTypeOf('object');
       const expectedShape = {
@@ -90,11 +82,10 @@ describe('markdown to html', () => {
       // requires async not because of how stores work, but how remark works.
       await delayAsync(10);
 
-      //console.log("🚀 ~ file: source_stores.spec.ts:32 ~ html.subscribe ~ $html:", JSON.stringify($html));
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
 
-    it('MAY work with get(html) because of being async', async () => {
+    it('should work with get(html)', async () => {
       markdown.set('a *markdown* text');
 
       //await tick();
@@ -104,6 +95,86 @@ describe('markdown to html', () => {
       const $html = get(html);
 
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
+    });
+
+    describe('inline html', () => {
+      it('should render inline html', () => {
+        markdown.set(`Outside div
+
+<div>
+
+a *markdown* inside div
+
+</div>
+      `);
+
+        const $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual(
+          '<p>Outside div</p><div><p>a <em>markdown</em> inside div</p></div>'
+        );
+      });
+
+      it('should not allow dangerous tags and attributes', () => {
+        markdown.set(`Outside div
+
+<script>
+console.log('Hello world');
+</script>
+
+<a href="" onClick="alert('Hi!')">link</a>
+
+      `);
+
+        const $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual('<p>Outside div</p><p><a href="">link</a></p>');
+      });
+
+      it('should allow class and style in particular', () => {
+        markdown.set(`Outside div
+
+<div style="border: 1px solid red;">
+
+a *markdown* inside div
+
+</div>
+
+<h2 class="m-0">heading without margin</h2>
+
+      `);
+
+        const $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual(
+          [
+            '<p>Outside div</p>',
+            '<div style="border: 1px solid red;"><p>a <em>markdown</em> inside div</p></div>',
+            '<h2 class="m-0">heading without margin</h2>',
+          ].join('')
+        );
+      });
+
+      it('should preserve previous value if parse failed', () => {
+        markdown.set(`
+a *markdown* text
+
+<div>some text</div>
+      `);
+        let $html = get(html);
+        const expected1 = ['<p>a <em>markdown</em> text</p>', '<div>some text</div>'].join('');
+        expect($html.replaceAll('\n', '')).toEqual(expected1);
+
+        // set to brokent html
+
+        markdown.set(`
+<div
+
+a *markdown* text
+
+<div>some text</div>
+      `);
+
+        $html = get(html);
+        expect($html.replaceAll('\n', '')).toEqual(expected1);
+      });
     });
   });
 });
@@ -146,7 +217,6 @@ describe.skip('html to markdown', () => {
     html.set('<p>a <em>html</em> text</p>');
 
     //await tick();
-    //console.log("🚀 ~ file: source_stores.spec.ts:165 ~ mdast.subscribe ~ $mdast:", $mdast)
 
     const expectedShape = {
       type: 'root',
@@ -176,7 +246,6 @@ describe.skip('html to markdown', () => {
     // requires async not because of how stores work, but how remark works.
     //await delayAsync(10);
 
-    //console.log("🚀 ~ file: source_stores.spec.ts:32 ~ html.subscribe ~ $html:", JSON.stringify($html));
     expect($markdown.trim()).toEqual('a *html* text');
   });
 });

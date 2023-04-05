@@ -32,11 +32,6 @@
       showEditor = state.showEditor;
       showProperties = state.showProperties;
       showPreview = state.showPreview;
-      // $markdown = state.markdown ?? '';
-      // showToc = state.showToc ?? showToc;
-      // showEditor = state.showEditor ?? showEditor;
-      // showProperties = state.showProperties ?? showProperties;
-      // showPreview = state.showPreview ?? showPreview;
     },
   };
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =

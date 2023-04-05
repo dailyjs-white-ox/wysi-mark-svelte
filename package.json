@@ -20,6 +20,8 @@
 		"codemirror": "^5",
 		"hast-util-from-html": "^1.0.1",
 		"hast-util-is-element": "^2.1.3",
+		"hast-util-raw": "^8.0.0",
+		"hast-util-sanitize": "^4.1.0",
 		"hast-util-to-html": "^8.0.4",
 		"hast-util-to-mdast": "^9.0.0",
 		"hast-util-to-text": "^3.1.2",
