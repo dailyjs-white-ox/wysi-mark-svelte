@@ -1,15 +1,8 @@
-import { describe, it, beforeEach, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-import { tick } from 'svelte';
-import { get, writable } from 'svelte/store';
-import type { Readable } from 'svelte/store';
+import { get } from 'svelte/store';
 
-import {
-  markdown,
-  html,
-  // mdast,
-  hast,
-} from './source_stores';
+import { markdown, html, hast } from './source_stores';
 
 describe('markdown to html', () => {
   describe.skip('mdast', () => {
@@ -24,7 +17,6 @@ describe('markdown to html', () => {
       //await tick();
       // requires async not because of how stores work, but how remark works.
       await delayAsync(10);
-      //console.log("🚀 $mdast:", JSON.stringify($mdast, null, 2))
 
       expect($mdast).toBeTypeOf('object');
       const expectedShape = {
@@ -90,7 +82,6 @@ describe('markdown to html', () => {
       // requires async not because of how stores work, but how remark works.
       await delayAsync(10);
 
-      //console.log("🚀 ~ file: source_stores.spec.ts:32 ~ html.subscribe ~ $html:", JSON.stringify($html));
       expect($html).toEqual('<p>a <em>markdown</em> text</p>');
     });
 
@@ -226,7 +217,6 @@ describe.skip('html to markdown', () => {
     html.set('<p>a <em>html</em> text</p>');
 
     //await tick();
-    //console.log("🚀 ~ file: source_stores.spec.ts:165 ~ mdast.subscribe ~ $mdast:", $mdast)
 
     const expectedShape = {
       type: 'root',
@@ -256,7 +246,6 @@ describe.skip('html to markdown', () => {
     // requires async not because of how stores work, but how remark works.
     //await delayAsync(10);
 
-    //console.log("🚀 ~ file: source_stores.spec.ts:32 ~ html.subscribe ~ $html:", JSON.stringify($html));
     expect($markdown.trim()).toEqual('a *html* text');
   });
 });

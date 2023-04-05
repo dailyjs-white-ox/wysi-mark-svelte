@@ -15,9 +15,9 @@ export default function useSessionStorageSnapshot<T>(
   }
 
   function restoreSessionStorageSnapshot() {
-    const rowValue = sessionStorage?.[key];
-    if (!rowValue) return;
+    if (!sessionStorage.hasOwnProperty(key)) return;
 
+    const rowValue = sessionStorage[key];
     const value = JSON.parse(rowValue);
     restore(value);
     return value;
