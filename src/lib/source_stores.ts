@@ -21,7 +21,6 @@ export const markdown = writable('');
 
 export const hast = (() => {
   const store = derived(markdown, ($markdown) => {
-    console.log($markdown);
     const mdastTree = fromMarkdown($markdown);
     const hastTree = toHast(mdastTree);
     if (!hastTree) {
