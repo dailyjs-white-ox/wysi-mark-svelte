@@ -1,67 +1,38 @@
-import { writable, readable, derived, type Writable, type Readable } from 'svelte/store';
+import { writable, derived, type Readable } from 'svelte/store';
 
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { toHast } from 'mdast-util-to-hast'
-import { toMarkdown } from 'mdast-util-to-markdown';
-import { fromHtml } from 'hast-util-from-html'
-import { toMdast } from 'hast-util-to-mdast';
-import { toHtml } from 'hast-util-to-html'
-import { isElement } from 'hast-util-is-element'
-import { filter } from 'unist-util-filter'
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toHast } from 'mdast-util-to-hast';
+import { toHtml } from 'hast-util-to-html';
+import { isElement } from 'hast-util-is-element';
+import { filter } from 'unist-util-filter';
 import type { HastRoot, HastNodes, HastContent } from 'mdast-util-to-hast/lib/index.js';
-import type { MdastNode } from 'hast-util-to-mdast/lib/index.js'
 import type { VFile } from 'vfile';
 
 export type { HastNodes, HastContent };
 
+// markdown-driven
+
 export const markdown = writable('');
-export const html = writable('');
-export const mdast: Writable<MdastNode> = writable();
-export const hast: Writable<HastRoot> = writable();
 
-// propagate change on html change
-html.subscribe(($html) => {
-  const hastTree = fromHtml($html, { fragment: true });
-  hast.set(hastTree);
+export const hast = (() => {
+  const store = derived(markdown, ($markdown) => {
+    const mdastTree = fromMarkdown($markdown);
+    const hastTree = toHast(mdastTree);
+    if (!hastTree) {
+      throw new Error('hastTree is null');
+    }
+    return hastTree;
+  });
 
-  const mdastTree = toMdast(hastTree);
-  mdast.set(mdastTree);
+  return store;
+})();
 
-  const markdownSource = toMarkdown(mdastTree);
-  markdown.set(markdownSource);
-});
-
-// propagate change on markdown change
-markdown.subscribe(($markdown) => {
-  const mdastTree = fromMarkdown($markdown);
-  mdast.set(mdastTree);
-
-  const hastTree = toHast(mdastTree);
-  if (!hastTree) {
-    throw new Error('failed transforming mdast to hast');
-  }
-  hast.set(hastTree);
-
-  const htmlSource = toHtml(hastTree);
-  html.set(htmlSource);
-});
-
-hast.subscribe(($hast) => {
-  // propagate towards html
-  const htmlSource = toHtml($hast);
-  html.set(htmlSource);
-
-  // propagate towards markdown
-  const mdastTree = toMdast($hast);
-  mdast.set(mdastTree);
-  const markdownSource = toMarkdown(mdastTree);
-  markdown.set(markdownSource);
-});
+export const html = derived(hast, ($hast) => toHtml($hast));
 
 export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   // normalize children - remove blank text nodes, throughout the tree
@@ -73,20 +44,23 @@ export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   }) as HastRoot;
 
   // group nodes by HR node
-  const groups: HastContent[][] = children.reduce<HastContent[][]>((memo, node) => {
-    const lastGroup = memo.at(-1) ?? [];
+  const groups: HastContent[][] = children.reduce<HastContent[][]>(
+    (memo, node) => {
+      const lastGroup = memo.at(-1) ?? [];
 
-    // insert new group
-    if (node.type === 'element' && node.tagName === 'hr') {
-      memo.push([]);
-    }
-    // insert into last group
-    else {
-      lastGroup.push(node);
-    }
+      // insert new group
+      if (node.type === 'element' && node.tagName === 'hr') {
+        memo.push([]);
+      }
+      // insert into last group
+      else {
+        lastGroup.push(node);
+      }
 
-    return memo;
-  }, [[]]);
+      return memo;
+    },
+    [[]]
+  );
   if (groups.length > 0 && groups[0].length === 0) {
     groups.shift();
   }
@@ -105,19 +79,17 @@ function assignNodeIndexTrace(nodes: HastContent[], ancestorTrace: number[] = []
 
     node.properties = node.properties ?? {};
     node.properties.dataNodeIndexTrace = [...ancestorTrace, index].join('.');
-    //node.properties.className = (node.properties.className ?? []) as string[];
-    //node.properties.className.push(`node-index-${[...ancestorTrace, index].join('.')}`);
-
     assignNodeIndexTrace(node.children, [...ancestorTrace, index]);
-  })
+  });
 }
 
 // FIXME: deprecate me
 export const slides: Readable<string[]> = derived(html, ($html) =>
-  $html.split('<hr>').map(text => text.trim()).filter(Boolean)
+  $html
+    .split('<hr>')
+    .map((text) => text.trim())
+    .filter(Boolean)
 );
-
-// functions
 
 export async function processMarkdown(source: string): Promise<VFile> {
   return await unified()
@@ -130,8 +102,6 @@ export async function processMarkdown(source: string): Promise<VFile> {
 
 export function normalizeChildNodes(node: Node) {
   return [...node.childNodes]
-    .filter(
-      ({ nodeType }) => nodeType === document.ELEMENT_NODE || nodeType === document.TEXT_NODE
-    )
+    .filter(({ nodeType }) => nodeType === document.ELEMENT_NODE || nodeType === document.TEXT_NODE)
     .filter((node) => node.nodeValue?.trim() !== '');
 }

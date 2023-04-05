@@ -6,7 +6,6 @@
 
   export let slideIndex = 0;
   export let isSelected = false;
-  //export let slideHtml = '';
   export let hastNodes: HastContent[];
   export let selectedNodeTrace: number[] | undefined;
 
@@ -52,7 +51,6 @@
   tabindex="-1"
   on:keydown
   on:click={(ev) => {
-    //console.log('click', ev.target, ev);
     const nodeIndexTrace = ev.target?.dataset['nodeIndexTrace']?.split('.').map(Number);
     if (!nodeIndexTrace) return;
     dispatchEvent('select', nodeIndexTrace);

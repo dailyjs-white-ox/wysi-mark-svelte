@@ -5,20 +5,11 @@
   import PreviewSlide from './PreviewSlide.svelte';
   const dispatchEvent = createEventDispatcher();
 
-  // selected
   export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
   let slideIndex: number = 0;
   $: slideIndex = selected?.[0] ?? 0;
   let selectedNodeIndexTrace: number[] | undefined;
   $: selectedNodeIndexTrace = selected?.[1];
-
-  //let currentSlideIndex = 0;
-
-  //// update any change selected slide index to currentSlideIndex
-  //$: if (selectedSlideIndex !== undefined && selectedSlideIndex !== currentSlideIndex) {
-  //  //console.log('updating current slide index:', selectedSlideIndex, { currentSlideIndex, ...selected, });
-  //  currentSlideIndex = selectedSlideIndex;
-  //}
 
   let ref: HTMLElement;
 
@@ -50,8 +41,6 @@
       value={slideIndex}
       min="0"
       on:change={(ev) => {
-        console.log('change', ev);
-        //triggerSelect(slideIndex);
         triggerSelect(ev.target.value);
       }}
     />

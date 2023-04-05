@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { markdown, slides } from '$lib/source_stores';
+  import { markdown } from '$lib/source_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
@@ -14,7 +14,6 @@
   let showPreview = true;
   let showProperties = false;
 
-  // [slideIndex, indexTrace, sourceDetail]
   let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
 
   export const snapshot: Snapshot = {
@@ -39,8 +38,6 @@
       key: 'page:source',
     });
 
-  // callbacks
-
   function handleSelect({ detail }) {
     selected = detail;
   }
@@ -48,7 +45,6 @@
   let didMount = false;
   onMount(() => {
     const restoredValue = restoreSessionStorageSnapshot();
-    console.log('🚀 restoredValue:', restoredValue);
     didMount = true;
   });
   // run this after mount
@@ -56,7 +52,6 @@
     if (!didMount) return;
 
     const capturedValue = captureSessionStorageSnapshot();
-    console.log('🚀 capturedValue:', capturedValue);
   })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
@@ -152,6 +147,15 @@
   }
 
   /* --- */
+  .editor form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .editor .buttons {
+    display: flex;
+    justify-content: flex-end;
+  }
 
   textarea {
     height: 100%;

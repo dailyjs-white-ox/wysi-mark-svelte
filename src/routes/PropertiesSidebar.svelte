@@ -2,7 +2,6 @@
   import { createEventDispatcher } from 'svelte';
 
   import { slideHasts } from '$lib/source_stores';
-  //import NestedNodeList from '$lib/components/NestedNodeList.svelte';
   import NestedHastElementList from '$lib/components/NestedHastElementList.svelte';
   import type { HastContent } from 'mdast-util-to-hast/lib/state';
 
@@ -41,20 +40,11 @@
       value={slideIndex}
       on:change={(ev) => {
         if (!ev.target) return;
-        console.log('change', slideIndex, ev.target.value, ev);
         triggerSelect(ev.target.value);
       }}
     />
   </div>
-
-  <!--<fieldset>
-    <legend>Layout</legend>
-  </fieldset>-->
-
   <h3>Nodes</h3>
-  <!--{#if slideNode}
-    <NestedNodeList node={slideNode} on:select={({ detail }) => dispatchEvent('select', [slideIndex, detail])} />
-  {/if}-->
   {#if slideHastNodeGroup}
     <NestedHastElementList
       hastNodes={slideHastNodeGroup}

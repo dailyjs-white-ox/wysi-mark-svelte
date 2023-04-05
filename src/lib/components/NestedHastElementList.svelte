@@ -2,7 +2,8 @@
   import { createEventDispatcher } from 'svelte';
   import { toText } from 'hast-util-to-text';
 
-  import type { HastContent } from 'mdast-util-to-hast/lib/state';
+  import type { HastContent, HastNodes } from 'mdast-util-to-hast/lib/state';
+  import { markdown } from '$lib/source_stores';
 
   const dispatchEvent = createEventDispatcher();
 
@@ -12,9 +13,17 @@
 
   // ui states
 
-  $: nodesOpen = hastNodes.map(() => false);
+  let nodesOpen: boolean[];
+  $: {
+    if (hastNodes) {
+      if (!nodesOpen) {
+        nodesOpen = hastNodes.map(() => false);
+      } else if (nodesOpen.length !== hastNodes.length) {
+        nodesOpen = hastNodes.map(() => false);
+      }
+    }
+  }
 
-  //
   $: {
     if (selectedNodeIndexTrace && selectedNodeIndexTrace.length > 0) {
       nodesOpen[selectedNodeIndexTrace[0]] = true;
@@ -37,6 +46,24 @@
   function triggerSelect(nodeIndex: number | number[]) {
     const indexes = Array.isArray(nodeIndex) ? nodeIndex : [nodeIndex];
     dispatchEvent('select', indexes);
+  }
+
+  function onInputText(ev: InputEvent, node: HastContent) {
+    const {
+      position: { start, end },
+    } = node;
+
+    // `abc` => abc
+    // TODO: add test here, or whatever.
+    if (node.value.length === end.offset - start.offset - 2) {
+      end.offset -= 1;
+      start.offset += 1;
+    }
+
+    const value = ev.target.value || '.';
+
+    const newSource = $markdown.slice(0, start.offset) + value + $markdown.slice(end.offset);
+    $markdown = newSource;
   }
 </script>
 
@@ -66,7 +93,7 @@
               {nodesOpen[index] ? '-' : '+'}
             </button>
           {:else if node.type === 'text'}
-            <textarea value={node.value} />
+            <textarea value={node.value} on:input={(ev) => onInputText(ev, node)} />
           {/if}
         </div>
 
