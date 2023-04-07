@@ -5,16 +5,19 @@
 
   export let style = '';
 
+  let rect: DOMRect;
+
   let element: HTMLElement;
 
   onMount(() => {
-    const rect = element.getBoundingClientRect();
+    rect = element.getBoundingClientRect();
+    console.log('🚀 rect:', rect);
     dispatchEvent('size', rect);
   });
 </script>
 
-<div class="splitter-container" {style} bind:this={element}>
-  <slot />
+<div class="splitter-container" {style} bind:this={element} data-width={rect?.width}>
+  <slot {rect} />
 </div>
 
 <style>

@@ -6,7 +6,7 @@
 
   let className = '';
   export { className as class };
-  export let borderColor: string;
+  export let borderColor: string | undefined = undefined;
 
   let leftPx: number | undefined = undefined;
   $: left = unlessUndefined(leftPx, (num) => `${num}px`);
@@ -30,10 +30,11 @@
   style:--border-color={borderColor}
   use:draggable={{
     axis: 'x',
-    defaultPosition: { x: leftPx ?? 0, y: 0 },
+    position: { x: leftPx ?? 0, y: 0 },
   }}
   on:neodrag:start={(e) => dispatchEvent('drag:start', e.detail)}
   on:neodrag:end={(e) => dispatchEvent('drag:end', e.detail)}
+  on:neodrag={(e) => dispatchEvent('drag', e.detail)}
 >
   <div class="inner-line" />
 </div>

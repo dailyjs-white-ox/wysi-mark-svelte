@@ -109,7 +109,7 @@
       <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
 
-    <SplitContainer style="grid-area: 2 / 1 / 3 / 5;">
+    <SplitContainer style="grid-area: 2 / 1 / 3 / 5;" let:rect>
       {#if showToc}
         <Splitter
           class="toc"
@@ -121,7 +121,15 @@
         />
       {/if}
       {#if showProperties}
-        <Splitter class="properties" borderColor="red" right={propertiesWidth} />
+        <RightSplitter
+          class="properties"
+          borderColor="red"
+          right={propertiesWidth}
+          {rect}
+          on:drag:end={({ detail }) => {
+            propertiesWidth = rect.width - detail.offsetX;
+          }}
+        />
       {/if}
     </SplitContainer>
   </main>
