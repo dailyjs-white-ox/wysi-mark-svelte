@@ -11,6 +11,7 @@
   import Textarea from '$lib/components/Editor/Textarea.svelte';
   import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
   import type { Snapshot } from './$types';
+  import Splitter from '$lib/components/Splitter.svelte';
 
   let showPresentation = false;
   let showToc = true;
@@ -19,6 +20,10 @@
   let showProperties = false;
 
   let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
+
+  let tocWidth = 200;
+  let propertiesWidth = 200;
+  $: propertiesWidth = showProperties ? 200 : 0;
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -67,6 +72,8 @@
     class:hide-editor={!showEditor}
     class:hide-preview={!showPreview}
     class:hide-properties={!showProperties}
+    style:--toc-width={`${tocWidth}px`}
+    style:--properties-width={`${propertiesWidth}px`}
   >
     <nav class="navigator">
       <div>
@@ -79,11 +86,13 @@
         <button on:click={() => (showProperties = !showProperties)}>Properties</button>
       </div>
     </nav>
+
     <section class="toc">
       {#if showToc}
         <ContentsSidebar {selected} on:select={handleSelect} />
       {/if}
     </section>
+
     <section class="editor">
       <!-- <Textarea bind:value={$markdown} /> -->
       <CodeMirror5Editor {selected} bind:value={$markdown} />
@@ -93,13 +102,18 @@
         <Preview {selected} on:select={handleSelect} />
       {/if}
     </section>
+
     <section class="properties">
       <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
 
     <div class="splitter-container">
-      <div class="splitter toc" use:draggable={{ axis: 'x' }} style:--border-color="red" />
-      <div class="splitter properties" use:draggable={{ axis: 'x' }} style:--border-color="red" />
+      {#if showToc}
+        <Splitter class="toc" borderColor="red" left={tocWidth} />
+      {/if}
+      {#if showProperties}
+        <Splitter class="properties" borderColor="red" right={propertiesWidth} />
+      {/if}
     </div>
   </main>
 {/if}
@@ -177,21 +191,6 @@
     grid-area: 2 / 1 / 3 / 5;
     position: relative;
     pointer-events: none;
-  }
-  .splitter {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    pointer-events: auto;
-  }
-  .splitter.toc {
-    left: var(--toc-width);
-    border-left: 1px solid var(--border-color, 'black');
-  }
-  .splitter.properties {
-    right: var(--properties-width);
-    border-right: 1px solid var(--border-color, 'black');
   }
 
   /* --- */
