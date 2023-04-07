@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { draggable } from '@neodrag/svelte';
+
   import { markdown } from '$lib/source_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
@@ -94,6 +96,11 @@
     <section class="properties">
       <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
+
+    <div class="splitter-container">
+      <div class="splitter toc" use:draggable={{ axis: 'x' }} style:--border-color="red" />
+      <div class="splitter properties" use:draggable={{ axis: 'x' }} style:--border-color="red" />
+    </div>
   </main>
 {/if}
 
@@ -164,6 +171,27 @@
   }
   main.hide-properties {
     --properties-width: 0;
+  }
+
+  .splitter-container {
+    grid-area: 2 / 1 / 3 / 5;
+    position: relative;
+    pointer-events: none;
+  }
+  .splitter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    pointer-events: auto;
+  }
+  .splitter.toc {
+    left: var(--toc-width);
+    border-left: 1px solid var(--border-color, 'black');
+  }
+  .splitter.properties {
+    right: var(--properties-width);
+    border-right: 1px solid var(--border-color, 'black');
   }
 
   /* --- */
