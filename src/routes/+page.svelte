@@ -10,8 +10,9 @@
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import Textarea from '$lib/components/Editor/Textarea.svelte';
   import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
+  import Splitter from '$lib/components/Splitter/Splitter.svelte';
+  import SplitContainer from '$lib/components/Splitter/Container.svelte';
   import type { Snapshot } from './$types';
-  import Splitter from '$lib/components/Splitter.svelte';
 
   let showPresentation = false;
   let showToc = true;
@@ -107,14 +108,14 @@
       <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
 
-    <div class="splitter-container">
+    <SplitContainer style="grid-area: 2 / 1 / 3 / 5;">
       {#if showToc}
         <Splitter class="toc" borderColor="red" left={tocWidth} />
       {/if}
       {#if showProperties}
         <Splitter class="properties" borderColor="red" right={propertiesWidth} />
       {/if}
-    </div>
+    </SplitContainer>
   </main>
 {/if}
 
@@ -185,12 +186,6 @@
   }
   main.hide-properties {
     --properties-width: 0;
-  }
-
-  .splitter-container {
-    grid-area: 2 / 1 / 3 / 5;
-    position: relative;
-    pointer-events: none;
   }
 
   /* --- */

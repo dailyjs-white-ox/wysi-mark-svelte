@@ -17,11 +17,10 @@
 <div
   class:splitter={true}
   class={className}
-  use:draggable={{ axis: 'x' }}
   style:--border-color={borderColor}
   style:left
   style:right
-  data-right-px={rightPx}
+  use:draggable={{ axis: 'x' }}
 />
 
 <style>
