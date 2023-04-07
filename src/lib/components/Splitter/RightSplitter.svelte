@@ -6,16 +6,19 @@
 
   const dispatchEvent = createEventDispatcher();
 
-  // rect may be passed as a prop, or through context
-  const rectStore = getContext<Writable<DOMRect>>('splitter');
-  export let rect: DOMRect = $rectStore; // this is optional
+  const rect = getContext<Writable<DOMRect>>('splitter');
 
   export let right: number | undefined = undefined;
-  $: left = right === undefined ? undefined : rect.width - right;
+  $: left = right === undefined ? undefined : $rect.width - right;
 
   // make sure left is re-calculated on rect change (such as resize)
-  rectStore.subscribe(($rect) => {
+  rect.subscribe(($rect) => {
+    const prevLeft = left;
     left = right === undefined ? undefined : $rect.width - right;
+    console.log('resize, recomputing left:', Math.floor(prevLeft), '=>', Math.floor(left), {
+      $rect,
+      right,
+    });
   });
 </script>
 
@@ -26,7 +29,7 @@
   on:drag:end
   on:drag
   on:drag:end={({ detail }) => {
-    const offsetRight = rect.width - detail.offsetX;
-    dispatchEvent('drag:end:right', { ...detail, offsetRight, rect });
+    const offsetRight = $rect.width - detail.offsetX;
+    dispatchEvent('drag:end:right', { ...detail, offsetRight, rect: $rect });
   }}
 />
