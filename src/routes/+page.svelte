@@ -98,6 +98,11 @@
 {/if}
 
 <style>
+  /* custom properties */
+  main {
+    --toc-width: 200px;
+    --properties-width: 200px;
+  }
   /* positions & sizes */
   main {
     height: 100%;
@@ -112,13 +117,18 @@
     display: grid;
     grid-template-rows: 50px 1fr;
     grid-template-columns:
-      var(--toc-width, 200px)
+      var(--toc-width, 0)
       var(--editor-width, minmax(0, 1fr))
       var(--preview-width, minmax(0, 1fr))
-      var(--properties-width, 200px);
+      var(--properties-width, 0);
+    grid-template-areas:
+      'nav nav nav nav'
+      'toc editor preview properties'
+      'footer footer footer footer';
   }
   .navigator {
-    grid-area: 1 / 1 / 2 / -1;
+    /* grid-area: 1 / 1 / 2 / -1; */
+    grid-area: nav;
     display: flex;
     justify-content: space-between;
     padding: 0 4px;
@@ -127,16 +137,20 @@
     color: white;
   }
   .toc {
-    grid-area: 2 / 1 / 3 / 2;
+    /* grid-area: 2 / 1 / 3 / 2; */
+    grid-area: toc;
   }
   .editor {
-    grid-area: 2 / 2 / 3 / 3;
+    /* grid-area: 2 / 2 / 3 / 3; */
+    grid-area: editor;
   }
   .preview {
-    grid-area: 2 / 3 / 3 / 4;
+    /* grid-area: 2 / 3 / 3 / 4; */
+    grid-area: preview;
   }
   .properties {
-    grid-area: 2 / 4 / 3 / 5;
+    /* grid-area: 2 / 4 / 3 / 5; */
+    grid-area: properties;
   }
 
   main.hide-toc {
