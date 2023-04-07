@@ -11,8 +11,17 @@
 
   onMount(() => {
     rect = element.getBoundingClientRect();
-    console.log('🚀 rect:', rect);
     dispatchEvent('size', rect);
+
+    const resizeObserver = new ResizeObserver((_entries) => {
+      rect = element.getBoundingClientRect();
+      dispatchEvent('size', rect);
+    });
+    resizeObserver.observe(element);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   });
 </script>
 

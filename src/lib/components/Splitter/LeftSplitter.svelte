@@ -9,7 +9,6 @@
   export let borderColor: string | undefined = undefined;
 
   let leftPx: number | undefined = undefined;
-  $: left = unlessUndefined(leftPx, (num) => `${num}px`);
   export { leftPx as left };
 
   let widthPx: number | undefined = undefined;
