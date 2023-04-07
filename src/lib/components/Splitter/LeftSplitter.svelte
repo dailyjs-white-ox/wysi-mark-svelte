@@ -1,8 +1,22 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { draggable } from '@neodrag/svelte';
+  type DragEventData = {
+    /** How much element moved from its original position horizontally */
+    offsetX: number;
+    /** How much element moved from its original position vertically */
+    offsetY: number;
+    /** The node on which the draggable is applied */
+    rootNode: HTMLElement;
+    /** The element being dragged */
+    currentNode: HTMLElement;
+  };
 
-  const dispatchEvent = createEventDispatcher();
+  const dispatchEvent = createEventDispatcher<{
+    'drag:start': DragEventData;
+    'drag:end': DragEventData;
+    drag: DragEventData;
+  }>();
 
   let className = '';
   export { className as class };
