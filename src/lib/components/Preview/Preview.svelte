@@ -4,7 +4,8 @@
   import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
   import { selected1, type SelectedType } from '$lib/selected_stores';
-  const dispatchEvent = createEventDispatcher();
+
+  const dispatchEvent = createEventDispatcher<{ select: SelectedType }>();
 
   let slideIndex: number = 0;
   let selectedNodeIndexTrace: number[] | undefined;

@@ -1,15 +1,9 @@
 <script lang="ts">
   import CodeMirror5 from './CodeMirror5.svelte';
   import { slideHasts } from '$lib/source_stores';
+  import { selectedNode1Index, selectedNode1IndexTrace } from '$lib/selected_stores';
 
   export let value: string;
-
-  // selected
-  export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
-  let slideIndex: number = 0;
-  $: slideIndex = selected?.[0] ?? 0;
-  let selectedNodeIndexTrace: number[] | undefined;
-  $: selectedNodeIndexTrace = selected?.[1];
 
   let editorComponent; // Component
   let editor; // CodeMirror instance
@@ -28,7 +22,7 @@
       const coords = editor.charCoords(pos, 'local');
       editor.getScrollerElement().scrollTo({ top: coords.top, behavior: 'smooth' });
     }
-  })(slideIndex);
+  })($selectedNode1Index);
 
   // mark
   $: ((slideIndex, nodeIndexTrace) => {
@@ -42,7 +36,7 @@
       editorComponent.unmarkText();
       editorComponent.markText({ from: start.offset, to: end.offset });
     }
-  })(slideIndex, selectedNodeIndexTrace);
+  })($selectedNode1Index, $selectedNode1IndexTrace);
 
   function selectNodeFromIndexTrace(slideIndex: number, nodeIndexTrace: number[] | undefined) {
     if (!nodeIndexTrace) return;

@@ -2,18 +2,15 @@
   import { createEventDispatcher } from 'svelte';
   import { contentTitleFromHast } from '$lib/source_helpers';
   import { slideHasts } from '$lib/source_stores';
+  import { selectedNode1Index } from '$lib/selected_stores';
+  import type { SelectedType } from '$lib/selected_stores';
 
-  const dispatchEvent = createEventDispatcher();
-
-  // selected
-  export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
-  let selectedSlideIndexProp: number = 0;
-  $: selectedSlideIndexProp = selected?.[0] ?? 0;
+  const dispatchEvent = createEventDispatcher<{ select: SelectedType }>();
 
   function triggerSelect(slideIndex: string | number) {
     dispatchEvent('select', [
       Number(slideIndex),
-      null,
+      undefined,
       {
         source: 'Contents',
         timestamp: Date.now(),
@@ -27,7 +24,7 @@
     {#each $slideHasts as nodeGroup, index}
       {@const title = contentTitleFromHast(nodeGroup)}
       <li
-        class:selected={selectedSlideIndexProp === index}
+        class:selected={$selectedNode1Index === index}
         tabindex="-1"
         on:click={() => triggerSelect(index)}
         on:keydown

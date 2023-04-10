@@ -21,8 +21,6 @@
   let showPreview = true;
   let showProperties = false;
 
-  let selected: SelectedType | undefined;
-
   let tocWidth = 200;
   let propertiesWidth = 200;
   let prevTocWidth = tocWidth;
@@ -49,12 +47,7 @@
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
     useSessionStorageSnapshot({ ...snapshot, key: 'page:source' });
 
-  function handleSelect({
-    detail,
-  }: {
-    detail: [number, null, { source: string; timestamp: number }];
-  }) {
-    selected = detail;
+  function handleSelect({ detail }: { detail: SelectedType }) {
     $selecteds = [detail];
   }
 
@@ -116,13 +109,13 @@
 
     <section class="toc">
       {#if showToc}
-        <ContentsSidebar {selected} on:select={handleSelect} />
+        <ContentsSidebar on:select={handleSelect} />
       {/if}
     </section>
 
     <section class="editor">
-      <!-- <Textarea bind:value={$markdown} /> -->
-      <CodeMirror5Editor {selected} bind:value={$markdown} />
+      <!-- <Textarea /> -->
+      <CodeMirror5Editor bind:value={$markdown} />
     </section>
     <section class="preview">
       {#if showPreview}
@@ -131,7 +124,7 @@
     </section>
 
     <section class="properties">
-      <PropertiesSidebar {selected} on:select={handleSelect} />
+      <PropertiesSidebar on:select={handleSelect} />
     </section>
 
     <SplitContainer style="grid-area: 2 / 1 / 3 / 5;">
