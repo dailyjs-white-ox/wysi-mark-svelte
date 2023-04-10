@@ -3,6 +3,7 @@
 
   import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
+  import { buildSlideIndexClassName } from './utils';
   const dispatchEvent = createEventDispatcher();
 
   export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
@@ -26,7 +27,7 @@
 
   // scroll into selected slide
   $: ((slideIndex) => {
-    const selectedSlide = ref?.querySelector(`.slide-index-${slideIndex}`);
+    const selectedSlide = ref?.querySelector(`.${buildSlideIndexClassName(slideIndex)}`);
     if (selectedSlide) {
       selectedSlide.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }

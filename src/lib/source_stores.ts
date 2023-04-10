@@ -12,15 +12,19 @@ import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
 import { filter } from 'unist-util-filter';
+import { toText } from 'hast-util-to-text';
 import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
 import type { VFile } from 'vfile';
+
+import { buildSlideIndexClassName } from './components/Preview/utils';
+import { prependSelector } from './utils/cssparse';
 
 export type { HastNodes, HastContent };
 
 // see ../../node_modules/hast-util-sanitize/lib/schema.js for details
 const sanitizeSchema = structuredClone({
   ...defaultSchema,
-  tagNames: [...(defaultSchema.tagNames ?? []), 'header', 'footer'],
+  tagNames: [...(defaultSchema.tagNames ?? []), 'header', 'footer', 'style'],
   attributes: {
     ...defaultSchema.attributes,
     '*': [...(defaultSchema.attributes ?? {}).div, 'className', 'style'],
@@ -71,7 +75,7 @@ export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   }) as HastRoot;
 
   // group nodes by HR node
-  const groups: HastContent[][] = children.reduce<HastContent[][]>(
+  const slideGroups: HastContent[][] = children.reduce<HastContent[][]>(
     (memo, node) => {
       const lastGroup = memo.at(-1) ?? [];
 
@@ -88,25 +92,47 @@ export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
     },
     [[]]
   );
-  if (groups.length > 0 && groups[0].length === 0) {
-    groups.shift();
+  if (slideGroups.length > 0 && slideGroups[0].length === 0) {
+    slideGroups.shift();
   }
 
-  // TODO: assign slide index and node trace
-  groups.forEach((groupNodes, groupIndex) => {
-    assignNodeIndexTrace(groupNodes);
+  slideGroups.forEach((groupNodes, groupIndex) => {
+    // assign slide index and node trace
+    assignNodeIndexTrace(groupNodes, groupIndex);
+
+    // inject slide unique hash to inline styles
+    injectSlideLocalCssScope(groupNodes, groupIndex);
   });
 
-  return groups;
+  console.log('🚀 $slideHasts', slideGroups);
+  return slideGroups;
 });
 
-function assignNodeIndexTrace(nodes: HastContent[], ancestorTrace: number[] = []) {
+function assignNodeIndexTrace(
+  nodes: HastContent[],
+  groupIndex: number,
+  ancestorTrace: number[] = []
+) {
   nodes.forEach((node, index) => {
     if (!isElement(node)) return;
 
     node.properties = node.properties ?? {};
     node.properties.dataNodeIndexTrace = [...ancestorTrace, index].join('.');
-    assignNodeIndexTrace(node.children, [...ancestorTrace, index]);
+    assignNodeIndexTrace(node.children, groupIndex, [...ancestorTrace, index]);
+  });
+}
+
+function injectSlideLocalCssScope(groupNodes: HastContent[], groupIndex: number) {
+  const styleNodes = groupNodes.filter(
+    (node) => node.type === 'element' && node.tagName === 'style'
+  );
+  if (styleNodes.length === 0) return;
+
+  const className = buildSlideIndexClassName(groupIndex);
+  styleNodes.forEach((hastNode) => {
+    const styleText = toText(hastNode).trim();
+    const styleText2 = prependSelector(styleText, `article.${className}`);
+    hastNode.children = [{ type: 'text', value: styleText2 }];
   });
 }
 
