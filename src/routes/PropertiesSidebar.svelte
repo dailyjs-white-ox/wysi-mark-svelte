@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  import { slideHasts } from '$lib/source_stores';
+  import { slideHasts, type SlideHastNode } from '$lib/source_stores';
   import NestedHastElementList from '$lib/components/NestedHastElementList.svelte';
   import {
     selecteds,

@@ -61,7 +61,11 @@ export const hast = (() => {
 
 export const html = derived(hast, ($hast) => toHtml($hast, { allowDangerousHtml: true }));
 
-export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
+// slideHast
+
+export type SlideHastNode = Exclude<HastContent, { type: 'comment' } | { type: 'doctype' }>;
+
+export const slideHasts: Readable<SlideHastNode[][]> = derived(hast, ($hast) => {
   // normalize children - remove blank text nodes, throughout the tree
   const { children } = filter($hast, null, (node) => {
     if (node.type === 'text' && node.value.trim() === '') {
@@ -71,9 +75,13 @@ export const slideHasts: Readable<HastContent[][]> = derived(hast, ($hast) => {
   }) as HastRoot;
 
   // group nodes by HR node
-  const groups: HastContent[][] = children.reduce<HastContent[][]>(
+  const groups: SlideHastNode[][] = children.reduce<SlideHastNode[][]>(
     (memo, node) => {
       const lastGroup = memo.at(-1) ?? [];
+
+      // remove unused node types
+      if (node.type === 'doctype') return memo;
+      if (node.type === 'comment') return memo;
 
       // insert new group
       if (node.type === 'element' && node.tagName === 'hr') {
