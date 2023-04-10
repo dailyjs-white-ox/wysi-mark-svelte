@@ -3,19 +3,21 @@
 
   import { slideHasts } from '$lib/source_stores';
   import NestedHastElementList from '$lib/components/NestedHastElementList.svelte';
-  import type { HastContent } from 'mdast-util-to-hast/lib/state';
-  import { selected1, type SelectedType } from '$lib/selected_stores';
+  import {
+    selecteds,
+    selectedNode1Index,
+    selectedNodeIndexTracesMap,
+    type SelectedType,
+  } from '$lib/selected_stores';
 
-  const dispatchEvent = createEventDispatcher();
+  const dispatchEvent = createEventDispatcher<{
+    select: SelectedType;
+    'select:more': SelectedType;
+  }>();
 
-  // selected
-  let slideIndex: number = 0;
-  let selectedNodeIndexTrace: number[] | undefined;
-  $: slideIndex = $selected1?.[0] ?? 0;
-  $: selectedNodeIndexTrace = $selected1?.[1];
+  $: slideIndex = $selectedNode1Index;
 
-  let slideHastNodeGroup: HastContent[];
-
+  let slideHastNodeGroup: SlideHastNode[];
   $: slideHastNodeGroup = $slideHasts[slideIndex];
 
   function triggerSelect(slideIndex: string | number, indexTrace?: number[]) {
@@ -28,6 +30,30 @@
       },
     ]);
   }
+  function triggerSelectMore(slideIndex: string | number, indexTrace?: number[]) {
+    dispatchEvent('select:more', [
+      Number(slideIndex),
+      indexTrace,
+      {
+        source: 'Properties',
+        timestamp: Date.now(),
+      },
+    ]);
+  }
+
+  function findHastNodeByIndexTrace(
+    node: SlideHastNode,
+    indexTrace: number[]
+  ): SlideHastNode | undefined {
+    if (indexTrace.length === 0) return node;
+    if (node.type === 'text') return;
+
+    const [childIndex, ...remaining] = indexTrace;
+    const childNode = node.children[childIndex];
+    if (!childNode) return;
+
+    return findHastNodeByIndexTrace(childNode, remaining);
+  }
 </script>
 
 <aside>
@@ -39,7 +65,7 @@
       value={slideIndex}
       on:change={(ev) => {
         if (!ev.target) return;
-        triggerSelect(ev.target.value);
+        triggerSelect(ev.currentTarget.value);
       }}
     />
   </div>
@@ -47,10 +73,9 @@
   {#if slideHastNodeGroup}
     <NestedHastElementList
       hastNodes={slideHastNodeGroup}
-      {selectedNodeIndexTrace}
-      on:select={({ detail: indexTrace }) => {
-        triggerSelect(slideIndex, indexTrace);
-      }}
+      selectedNodeIndexTraces={$selectedNodeIndexTracesMap[slideIndex] ?? []}
+      on:select={({ detail: indexTrace }) => triggerSelect(slideIndex, indexTrace)}
+      on:select:more={({ detail: indexTrace }) => triggerSelectMore(slideIndex, indexTrace)}
     />
   {/if}
 </aside>

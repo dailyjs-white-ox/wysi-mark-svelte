@@ -50,6 +50,10 @@
   function handleSelect({ detail }: { detail: SelectedType }) {
     $selecteds = [detail];
   }
+  function handleSelectMore({ detail }: { detail: SelectedType }) {
+    $selecteds.push(window.structuredClone(detail));
+    $selecteds = $selecteds;
+  }
 
   function toggleShowToc() {
     // showToc = !showToc;
@@ -109,7 +113,7 @@
 
     <section class="toc">
       {#if showToc}
-        <ContentsSidebar on:select={handleSelect} />
+        <ContentsSidebar on:select={handleSelect} on:select:more={handleSelectMore} />
       {/if}
     </section>
 
@@ -119,12 +123,12 @@
     </section>
     <section class="preview">
       {#if showPreview}
-        <Preview on:select={handleSelect} />
+        <Preview on:select={handleSelect} on:select:more={handleSelectMore} />
       {/if}
     </section>
 
     <section class="properties">
-      <PropertiesSidebar on:select={handleSelect} />
+      <PropertiesSidebar on:select={handleSelect} on:select:more={handleSelectMore} />
     </section>
 
     <SplitContainer style="grid-area: 2 / 1 / 3 / 5;">

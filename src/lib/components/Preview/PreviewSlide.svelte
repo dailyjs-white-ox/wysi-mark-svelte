@@ -2,12 +2,16 @@
   import { createEventDispatcher } from 'svelte';
   import { toHtml } from 'hast-util-to-html';
   import type { HastContent } from 'mdast-util-to-hast/lib';
-  const dispatchEvent = createEventDispatcher();
+
+  const dispatchEvent = createEventDispatcher<{
+    select: number[];
+    'select:more': number[];
+  }>();
 
   export let slideIndex = 0;
   export let isSelected = false;
   export let hastNodes: HastContent[];
-  export let selectedNodeTrace: number[] | undefined;
+  export let selectedNodeTraces: number[][];
 
   let ref: HTMLElement;
 
@@ -15,18 +19,21 @@
 
   // highlight selected slide & node
   // FIXME: using vanilla javascript here. Make it more svelty.
-  $: if (isSelected && selectedNodeTrace && ref) {
-    const descendantNode = findDomNodeByIndexTrace(ref, selectedNodeTrace);
-    if (descendantNode) {
-      ref.querySelectorAll('.selected-node').forEach((el) => {
-        el.classList.remove('selected-node');
-      });
+  $: if (isSelected && selectedNodeTraces && ref) {
+    ref.querySelectorAll('.selected-node').forEach((el) => {
+      el.classList.remove('selected-node');
+    });
+    selectedNodeTraces?.forEach((selectedNodeTrace) => {
+      const descendantNode = findDomNodeByIndexTrace(ref, selectedNodeTrace);
+      if (!descendantNode) return;
+
       if (!isElement(descendantNode)) {
-        console.error('uh-oh, this is not an element', descendantNode);
-      } else {
-        descendantNode.classList.add('selected-node');
+        console.error('uh-oh, this is not an element', descendantNode, { selectedNodeTrace });
+        return;
       }
-    }
+
+      descendantNode.classList.add('selected-node');
+    });
   }
 
   function isElement(node: Node): node is Element {
@@ -53,7 +60,12 @@
   on:click={(ev) => {
     const nodeIndexTrace = ev.target?.dataset['nodeIndexTrace']?.split('.').map(Number);
     if (!nodeIndexTrace) return;
-    dispatchEvent('select', nodeIndexTrace);
+
+    if (ev.metaKey) {
+      dispatchEvent('select:more', nodeIndexTrace);
+    } else {
+      dispatchEvent('select', nodeIndexTrace);
+    }
   }}
 >
   {@html slideHtml}
