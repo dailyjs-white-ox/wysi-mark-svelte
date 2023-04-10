@@ -3,13 +3,13 @@
 
   import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
+  import { selected1, type SelectedType } from '$lib/selected_stores';
   const dispatchEvent = createEventDispatcher();
 
-  export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
   let slideIndex: number = 0;
-  $: slideIndex = selected?.[0] ?? 0;
   let selectedNodeIndexTrace: number[] | undefined;
-  $: selectedNodeIndexTrace = selected?.[1];
+  $: slideIndex = $selected1?.[0] ?? 0;
+  $: selectedNodeIndexTrace = $selected1?.[1];
 
   let ref: HTMLElement;
 

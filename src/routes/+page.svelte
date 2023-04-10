@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
 
   import { markdown } from '$lib/source_stores';
+  import { selecteds, type SelectedType } from '$lib/selected_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
@@ -20,7 +21,7 @@
   let showPreview = true;
   let showProperties = false;
 
-  let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
+  let selected: SelectedType | undefined;
 
   let tocWidth = 200;
   let propertiesWidth = 200;
@@ -48,8 +49,13 @@
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
     useSessionStorageSnapshot({ ...snapshot, key: 'page:source' });
 
-  function handleSelect({ detail }) {
+  function handleSelect({
+    detail,
+  }: {
+    detail: [number, null, { source: string; timestamp: number }];
+  }) {
     selected = detail;
+    $selecteds = [detail];
   }
 
   function toggleShowToc() {
@@ -120,7 +126,7 @@
     </section>
     <section class="preview">
       {#if showPreview}
-        <Preview {selected} on:select={handleSelect} />
+        <Preview on:select={handleSelect} />
       {/if}
     </section>
 
