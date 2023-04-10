@@ -26,6 +26,8 @@
   let propertiesWidth = 200;
   let prevTocWidth = tocWidth;
   let prevPropertiesWidth = propertiesWidth;
+  $: propertiesWidth = showProperties ? 200 : 0;
+  $: tocWidth = showToc ? 200 : 0;
 
   export const snapshot: Snapshot = {
     capture: () => ({
