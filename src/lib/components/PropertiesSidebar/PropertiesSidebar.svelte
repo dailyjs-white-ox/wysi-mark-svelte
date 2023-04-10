@@ -77,6 +77,31 @@
       on:select={({ detail: indexTrace }) => triggerSelect(slideIndex, indexTrace)}
       on:select:more={({ detail: indexTrace }) => triggerSelectMore(slideIndex, indexTrace)}
     />
+    <!-- selectedNodeIndexTrace={$selectedNode1IndexTrace} -->
+  {/if}
+
+  <h3>Styles ({$selecteds.length})</h3>
+  {#if $selecteds.length === 1}
+    {@const [_selectedSlideIndex, nodeIndexTrace] = $selecteds[0]}
+    {#if nodeIndexTrace}
+      {@const selectedNode = findHastNodeByIndexTrace(
+        slideHastNodeGroup[nodeIndexTrace?.[0]],
+        nodeIndexTrace?.slice(1)
+      )}
+      {#if selectedNode?.type === 'element'}
+        <form
+          on:submit|preventDefault={() => {
+            //
+          }}
+        >
+          <label>tag: <input type="text" value={selectedNode.tagName} /></label>
+          <label>Style: <textarea value={selectedNode.properties?.style ?? ''} /></label>
+
+          <!-- {JSON.stringify(selectedNode)} -->
+          <button type="submit">Apply</button>
+        </form>
+      {/if}
+    {/if}
   {/if}
 </aside>
 

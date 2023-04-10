@@ -7,7 +7,7 @@
   import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
-  import PropertiesSidebar from './PropertiesSidebar.svelte';
+  import PropertiesSidebar from '../lib/components/PropertiesSidebar/PropertiesSidebar.svelte';
   import Textarea from '$lib/components/Editor/Textarea.svelte';
   import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
   import Splitter from '$lib/components/Splitter/LeftSplitter.svelte';
