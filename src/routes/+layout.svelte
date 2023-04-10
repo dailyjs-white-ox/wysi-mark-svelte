@@ -30,5 +30,6 @@
   }
   footer {
     grid-area: 3 / 1 / 4 / 2;
+    border-top: 1px solid black;
   }
 </style>

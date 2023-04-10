@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { draggable } from '@neodrag/svelte';
 
   import { markdown } from '$lib/source_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
@@ -25,7 +24,8 @@
 
   let tocWidth = 200;
   let propertiesWidth = 200;
-  $: propertiesWidth = showProperties ? 200 : 0;
+  let prevTocWidth = tocWidth;
+  let prevPropertiesWidth = propertiesWidth;
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -44,13 +44,32 @@
     },
   };
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
-    useSessionStorageSnapshot({
-      ...snapshot,
-      key: 'page:source',
-    });
+    useSessionStorageSnapshot({ ...snapshot, key: 'page:source' });
 
   function handleSelect({ detail }) {
     selected = detail;
+  }
+
+  function toggleShowToc() {
+    // showToc = !showToc;
+    if (showToc) {
+      showToc = false;
+      prevTocWidth = tocWidth;
+      tocWidth = 0;
+    } else {
+      showToc = true;
+      tocWidth = prevTocWidth;
+    }
+  }
+  function toggleShowProperties() {
+    if (showProperties) {
+      showProperties = false;
+      prevPropertiesWidth = propertiesWidth;
+      propertiesWidth = 0;
+    } else {
+      showProperties = true;
+      propertiesWidth = prevPropertiesWidth;
+    }
   }
 
   let didMount = false;
@@ -70,22 +89,20 @@
   <Presentation on:close={() => (showPresentation = false)} />
 {:else}
   <main
-    class:hide-toc={!showToc}
     class:hide-editor={!showEditor}
     class:hide-preview={!showPreview}
-    class:hide-properties={!showProperties}
     style:--toc-width={`${tocWidth}px`}
     style:--properties-width={`${propertiesWidth}px`}
   >
     <nav class="navigator">
       <div>
         <button on:click={() => (showPresentation = true)}>Show Presentation</button>
-        <button on:click={() => (showToc = !showToc)}>ToC</button>
+        <button on:click={toggleShowToc}>ToC</button>
         <button on:click={() => (showEditor = !showEditor)}>Editor</button>
       </div>
       <div>
         <button on:click={() => (showPreview = !showPreview)}>Preview</button>
-        <button on:click={() => (showProperties = !showProperties)}>Properties</button>
+        <button on:click={toggleShowProperties}>Properties</button>
       </div>
     </nav>
 
@@ -190,17 +207,11 @@
     grid-area: properties;
   }
 
-  main.hide-toc {
-    --toc-width: 0;
-  }
   main.hide-editor {
     --editor-width: 0;
   }
   main.hide-preview {
     --preview-width: 0;
-  }
-  main.hide-properties {
-    --properties-width: 0;
   }
 
   /* --- */
