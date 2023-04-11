@@ -27,11 +27,11 @@
     }
   })($selectedNode1Index);
 
-  // mark
+  // mark text
   $: ((slideIndex, nodeIndexTrace) => {
     if (!nodeIndexTrace) return;
 
-    const selectedNode = selectNodeFromIndexTrace(slideIndex, nodeIndexTrace);
+    const selectedNode = selectNodeFromIndexTrace($slideHasts[slideIndex], nodeIndexTrace);
     if (selectedNode?.position && editorComponent) {
       const { start, end } = selectedNode.position;
       if (start.offset === undefined || end.offset === undefined) return;
@@ -40,10 +40,12 @@
     }
   })($selectedNode1Index, $selectedNode1IndexTrace);
 
-  function selectNodeFromIndexTrace(slideIndex: number, nodeIndexTrace: number[] | undefined) {
-    if (!nodeIndexTrace) return;
-    const slideNodes = $slideHasts[slideIndex];
+  function selectNodeFromIndexTrace(
+    slideNodes: SlideHastNode[],
+    nodeIndexTrace: number[] | undefined
+  ) {
     if (!slideNodes) return;
+    if (!nodeIndexTrace) return;
 
     let remainingIndexTrace = nodeIndexTrace.slice();
     const nextIndex = remainingIndexTrace.shift();
@@ -66,4 +68,7 @@
     value = detail.value;
   }}
   on:change
+  on:focus={() => editorComponent.unmarkText()}
+  on:focus
+  on:blur
 />
