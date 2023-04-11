@@ -16,6 +16,7 @@ import { filter } from 'unist-util-filter';
 import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
 import { toMdast, type Options as ToMdastOptions } from 'hast-util-to-mdast';
 import { toMarkdown, type Options as ToMarkdownOptions } from 'mdast-util-to-markdown';
+import type { HastElement } from 'mdast-util-to-hast/lib/state';
 
 export type { HastNodes, HastContent };
 
@@ -132,17 +133,36 @@ function assignNodeIndexTrace(nodes: HastContent[], ancestorTrace: number[] = []
   });
 }
 
-export function convertHastToMarkdown(
+export function hastToMarkdown(
   node: HastNodes,
   options?: { mdast?: ToMdastOptions; markdown?: ToMarkdownOptions }
 ): string {
   const mdast = toMdast(node, options?.mdast);
   const markdown = toMarkdown(mdast, options?.markdown);
-  console.log('🚀 ~ file: source_stores.ts:137 ~ convertHastToMarkdown:', {
-    mdast,
-    markdown,
-  });
   return markdown;
+}
+
+export function hastToMarkdownWithHtmlHead(node: HastElement, properties = {}): string {
+  // keep children as markdown
+  const children = [
+    {
+      type: 'text',
+      value: '\n' + node.children.map((childNode) => hastToMarkdown(childNode)).join('\n'),
+    } as const,
+  ];
+
+  const newHast = {
+    ...node,
+    properties: { ...node.properties, ...properties },
+    children,
+  };
+  const mdSource = toHtml(newHast);
+  console.log(
+    '🚀 ~ file: source_stores.ts:159 ~ hastToMarkdownWithHtmlHead ~ mdSource:',
+    JSON.stringify(mdSource),
+    { newHast }
+  );
+  return mdSource;
 }
 
 // FIXME: deprecate me

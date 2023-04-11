@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { convertHastToMarkdown, replaceMarkdown } from '$lib/source_stores';
+  import { hastToMarkdown, hastToMarkdownWithHtmlHead, replaceMarkdown } from '$lib/source_stores';
   import type { HastElement } from 'mdast-util-to-hast/lib/state';
   import Textarea from '../Editor/Textarea.svelte';
   import { heading as toMdastHeading } from 'hast-util-to-mdast/lib/handlers/heading';
@@ -21,23 +21,8 @@
     } = hastNode;
     if (start.offset === undefined || end.offset === undefined) return;
 
-    // wrap markdown
-    const { properties } = hastNode;
-    const mdSource = toHtml({
-      ...hastNode,
-      properties: {
-        ...properties,
-        style: styleText,
-      },
-      children: [
-        {
-          type: 'text',
-          value: hastNode.children.map((childNode) => convertHastToMarkdown(childNode)).join('\n'),
-        },
-      ],
-    });
-
-    console.log('🚀 submit ~ mdSource:', JSON.stringify(mdSource), { hastNode });
+    //
+    const mdSource = hastToMarkdownWithHtmlHead(hastNode, { style: styleText });
     replaceMarkdown({ start: start.offset, end: end.offset }, mdSource);
   }
 </script>
