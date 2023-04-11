@@ -5,6 +5,7 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeSanitize from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
+import { VFile } from 'vfile';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toHast } from 'mdast-util-to-hast';
 import { sanitize, defaultSchema } from 'hast-util-sanitize';
@@ -27,15 +28,19 @@ const sanitizeSchema = structuredClone({
   },
 });
 
-function turnMdastToSanitizedHast(mdastTree: MdastRoot): HastNodes {
+function turnMdastToSanitizedHast(mdastTree: MdastRoot, source: string): HastNodes {
   const hastTree0 = toHast(mdastTree, { allowDangerousHtml: true });
   if (!hastTree0) {
     throw new Error('hast tree is null');
   }
 
-  const hastTree1 = raw(hastTree0);
+  const hastTree1 = raw(hastTree0, { file: new VFile({ value: source }) });
 
   const hastTree2 = sanitize(hastTree1, sanitizeSchema);
+  console.log('🚀 ~ file: source_stores.ts:39 ~ turnMdastToSanitizedHast ~ hastTree2:', hastTree2, {
+    hastTree0,
+    hastTree1,
+  });
   return hastTree2;
 }
 
@@ -47,7 +52,7 @@ export const hast = (() => {
   const store: Readable<HastNodes> = derived(markdown, ($markdown) => {
     const mdastTree = fromMarkdown($markdown);
     try {
-      const hastTree = turnMdastToSanitizedHast(mdastTree);
+      const hastTree = turnMdastToSanitizedHast(mdastTree, $markdown);
       return hastTree;
     } catch (err) {
       console.error(err);
