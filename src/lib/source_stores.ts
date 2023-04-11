@@ -14,7 +14,8 @@ import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
 import { filter } from 'unist-util-filter';
 import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
-import type { VFile } from 'vfile';
+import { toMdast, type Options as ToMdastOptions } from 'hast-util-to-mdast';
+import { toMarkdown, type Options as ToMarkdownOptions } from 'mdast-util-to-markdown';
 
 export type { HastNodes, HastContent };
 
@@ -47,6 +48,14 @@ function turnMdastToSanitizedHast(mdastTree: MdastRoot, source: string): HastNod
 // markdown-driven
 
 export const markdown = writable('');
+
+export function replaceMarkdown({ start, end }: { start: number; end: number }, value: string) {
+  markdown.update(($markdown) => {
+    return $markdown.slice(0, start) + value + $markdown.slice(end);
+  });
+}
+
+// hast
 
 export const hast = (() => {
   const store: Readable<HastNodes> = derived(markdown, ($markdown) => {
@@ -121,6 +130,19 @@ function assignNodeIndexTrace(nodes: HastContent[], ancestorTrace: number[] = []
     node.properties.dataNodeIndexTrace = [...ancestorTrace, index].join('.');
     assignNodeIndexTrace(node.children, [...ancestorTrace, index]);
   });
+}
+
+export function convertHastToMarkdown(
+  node: HastNodes,
+  options?: { mdast?: ToMdastOptions; markdown?: ToMarkdownOptions }
+): string {
+  const mdast = toMdast(node, options?.mdast);
+  const markdown = toMarkdown(mdast, options?.markdown);
+  console.log('🚀 ~ file: source_stores.ts:137 ~ convertHastToMarkdown:', {
+    mdast,
+    markdown,
+  });
+  return markdown;
 }
 
 // FIXME: deprecate me

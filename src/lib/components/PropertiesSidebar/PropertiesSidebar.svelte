@@ -9,6 +9,7 @@
     selectedNodeIndexTracesMap,
     type SelectedType,
   } from '$lib/selected_stores';
+  import StylesProperty from './StylesProperty.svelte';
 
   const dispatchEvent = createEventDispatcher<{
     select: SelectedType;
@@ -77,7 +78,6 @@
       on:select={({ detail: indexTrace }) => triggerSelect(slideIndex, indexTrace)}
       on:select:more={({ detail: indexTrace }) => triggerSelectMore(slideIndex, indexTrace)}
     />
-    <!-- selectedNodeIndexTrace={$selectedNode1IndexTrace} -->
   {/if}
 
   <h3>Styles ({$selecteds.length})</h3>
@@ -88,18 +88,8 @@
         slideHastNodeGroup[nodeIndexTrace?.[0]],
         nodeIndexTrace?.slice(1)
       )}
-      {#if selectedNode?.type === 'element'}
-        <form
-          on:submit|preventDefault={() => {
-            //
-          }}
-        >
-          <label>tag: <input type="text" value={selectedNode.tagName} /></label>
-          <label>Style: <textarea value={selectedNode.properties?.style ?? ''} /></label>
-
-          <!-- {JSON.stringify(selectedNode)} -->
-          <button type="submit">Apply</button>
-        </form>
+      {#if selectedNode && selectedNode.type === 'element'}
+        <StylesProperty node={selectedNode} />
       {/if}
     {/if}
   {/if}
