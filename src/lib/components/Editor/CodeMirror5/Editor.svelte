@@ -1,16 +1,22 @@
 <script lang="ts">
   import CodeMirror5 from './CodeMirror5.svelte';
-  import { slideHasts } from '$lib/source_stores';
+  import { slideHasts, type SlideHastNode } from '$lib/source_stores';
   import { selectedNode1Index, selectedNode1IndexTrace } from '$lib/selected_stores';
   import type { EditorFromTextArea } from 'codemirror';
 
   export let value: string;
+  // $: console.log('🚀 value:', JSON.stringify(value));
+  $: if (editorComponent) {
+    editorComponent.update(value);
+  }
 
   let editorComponent: CodeMirror5; // Component
   let editor: EditorFromTextArea; // CodeMirror instance
 
   // scroll to slide
-  $: ((slideIndex) => {
+  $: scrollToSlide($selectedNode1Index);
+
+  function scrollToSlide(slideIndex: number) {
     if (editor && editor.hasFocus()) return;
 
     const startPos = $slideHasts[slideIndex]?.[0]?.position?.start;
@@ -25,7 +31,7 @@
       const coords = editor.charCoords(pos, 'local');
       editor.getScrollerElement().scrollTo({ top: coords.top, behavior: 'smooth' });
     }
-  })($selectedNode1Index);
+  }
 
   // mark text
   $: ((slideIndex, nodeIndexTrace) => {

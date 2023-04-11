@@ -48,8 +48,11 @@
 
     if (editor) {
       const { left, top } = editor.getScrollInfo();
+      const cursor = editor.getCursor();
+      //console.log('🚀 update ~ { left, top }:', { left, top, cursor });
       editor.setValue((value = new_code));
       editor.scrollTo(left, top);
+      editor.setCursor(cursor);
     }
   }
 
@@ -74,7 +77,7 @@
   }
 
   export function setCursor(pos: Position) {
-    // console.log('🚀 setCursor:', setCursor, pos);
+    //console.log('🚀 setCursor:', pos);
     if (editor) editor.setCursor(pos);
   }
 
