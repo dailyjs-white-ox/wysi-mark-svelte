@@ -16,7 +16,7 @@ import { filter } from 'unist-util-filter';
 import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
 import { toMdast, type Options as ToMdastOptions } from 'hast-util-to-mdast';
 import { toMarkdown, type Options as ToMarkdownOptions } from 'mdast-util-to-markdown';
-import type { HastElement } from 'mdast-util-to-hast/lib/state';
+import type { HastElement, HastText } from 'mdast-util-to-hast/lib/state';
 
 export type { HastNodes, HastContent };
 
@@ -39,7 +39,7 @@ function turnMdastToSanitizedHast(mdastTree: MdastRoot, source: string): HastNod
   const hastTree1 = raw(hastTree0, { file: new VFile({ value: source }) });
 
   const hastTree2 = sanitize(hastTree1, sanitizeSchema);
-  console.log('🚀 ~ file: source_stores.ts:39 ~ turnMdastToSanitizedHast ~ hastTree2:', hastTree2, {
+  console.log('🚀 ~ file: source_stores.ts:42 ~ turnMdastToSanitizedHast ~ hastTree2:', hastTree2, {
     hastTree0,
     hastTree1,
   });
@@ -142,27 +142,33 @@ export function hastToMarkdown(
   return markdown;
 }
 
+export function hastText(value: string): HastText {
+  return { type: 'text', value };
+}
+
+/**
+ * Convert hast element to markdown, but render the outer tag as HTML.
+ */
 export function hastToMarkdownWithHtmlHead(node: HastElement, properties = {}): string {
-  // keep children as markdown
+  // keep children in markdown as text
   const children = [
-    {
-      type: 'text',
-      value: '\n' + node.children.map((childNode) => hastToMarkdown(childNode)).join('\n'),
-    } as const,
+    hastText(
+      node.children
+        .map((childNode) => hastToMarkdown(childNode))
+        .join('\n')
+        .trim()
+    ),
   ];
 
-  const newHast = {
+  // hast node with children rendered as markdown
+  const newHastNode = {
     ...node,
     properties: { ...node.properties, ...properties },
     children,
   };
-  const mdSource = toHtml(newHast);
-  console.log(
-    '🚀 ~ file: source_stores.ts:159 ~ hastToMarkdownWithHtmlHead ~ mdSource:',
-    JSON.stringify(mdSource),
-    { newHast }
-  );
-  return mdSource;
+
+  const source = toHtml(newHastNode);
+  return source;
 }
 
 // FIXME: deprecate me
