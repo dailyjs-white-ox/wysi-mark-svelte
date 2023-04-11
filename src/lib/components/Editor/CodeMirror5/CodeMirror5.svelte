@@ -186,6 +186,13 @@
       cursorIndex.set(instance.indexFromPos(instance.getCursor()));
     });
 
+    editor.on('focus', (_instance) => {
+      dispatch('focus');
+    });
+    editor.on('blur', (_instance) => {
+      dispatch('blur');
+    });
+
     if (__first) await sleep(50);
     editor.refresh();
 
