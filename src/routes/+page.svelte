@@ -118,7 +118,8 @@
       <!-- <Textarea bind:value={$markdown} /> -->
       <CodeMirror5Editor {selected} bind:value={$markdown} />
     </section>
-    <section class="preview">
+
+    <section class="preview" aria-label="preview" style:border-left="1px solid #676778">
       {#if showPreview}
         <Preview {selected} on:select={handleSelect} />
       {/if}
@@ -136,6 +137,19 @@
           left={tocWidth}
           on:drag:end={({ detail }) => {
             tocWidth = detail.offsetX;
+          }}
+        />
+      {/if}
+      {#if showPreview}
+        <Splitter
+          class="preview-splitter"
+          borderColor="#676778"
+          visible={false}
+          left={`calc((100% - ${tocWidth}px - ${propertiesWidth}px) * ${editorWidthRatio})`}
+          on:drag:end={({ detail }) => {
+            console.log('🚀 ~ file: +page.svelte:156 ~ detail:', detail.offsetX, { detail, rect });
+            // editorWidthRatio = detail.offsetX - tocWidth;
+            editorWidthRatio = detail.offsetX / (rect.width - tocWidth - propertiesWidth);
           }}
         />
       {/if}
