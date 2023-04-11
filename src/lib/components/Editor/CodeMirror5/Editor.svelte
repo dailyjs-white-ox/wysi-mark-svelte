@@ -2,14 +2,17 @@
   import CodeMirror5 from './CodeMirror5.svelte';
   import { slideHasts } from '$lib/source_stores';
   import { selectedNode1Index, selectedNode1IndexTrace } from '$lib/selected_stores';
+  import type { EditorFromTextArea } from 'codemirror';
 
   export let value: string;
 
-  let editorComponent; // Component
-  let editor; // CodeMirror instance
+  let editorComponent: CodeMirror5; // Component
+  let editor: EditorFromTextArea; // CodeMirror instance
 
   // scroll to slide
   $: ((slideIndex) => {
+    if (editor && editor.hasFocus()) return;
+
     const startPos = $slideHasts[slideIndex]?.[0]?.position?.start;
     if (!startPos) return;
 
@@ -18,7 +21,7 @@
         line: startPos.line - 1,
         ch: startPos.column - 1,
       };
-      editorComponent.setCursor(pos, { scroll: false });
+      editorComponent.setCursor(pos);
       const coords = editor.charCoords(pos, 'local');
       editor.getScrollerElement().scrollTo({ top: coords.top, behavior: 'smooth' });
     }
@@ -27,12 +30,11 @@
   // mark
   $: ((slideIndex, nodeIndexTrace) => {
     if (!nodeIndexTrace) return;
-    // console.log( '🚀 ~ file: Editor.svelte:35 ~ nodeIndexTrace:', nodeIndexTrace, $slideHasts[slideIndex], { $slideHasts });
 
     const selectedNode = selectNodeFromIndexTrace(slideIndex, nodeIndexTrace);
-    // console.log('🚀 ~ file: Editor.svelte:44 ~ selected node:', selectedNode, { editorComponent });
     if (selectedNode?.position && editorComponent) {
       const { start, end } = selectedNode.position;
+      if (start.offset === undefined || end.offset === undefined) return;
       editorComponent.unmarkText();
       editorComponent.markText({ from: start.offset, to: end.offset });
     }
@@ -44,12 +46,24 @@
     if (!slideNodes) return;
 
     let remainingIndexTrace = nodeIndexTrace.slice();
-    let node = slideNodes[remainingIndexTrace.shift()];
+    const nextIndex = remainingIndexTrace.shift();
+    if (nextIndex === undefined) return;
+    let node = slideNodes[nextIndex];
     while (node && remainingIndexTrace.length) {
-      node = node.children[remainingIndexTrace.shift()];
+      const nextIndex = remainingIndexTrace.shift();
+      if (nextIndex === undefined) break;
+      node = node.children[nextIndex];
     }
     return node;
   }
 </script>
 
-<CodeMirror5 bind:value bind:this={editorComponent} bind:editor />
+<CodeMirror5
+  bind:this={editorComponent}
+  bind:editor
+  {value}
+  on:change={({ detail }) => {
+    value = detail.value;
+  }}
+  on:change
+/>
