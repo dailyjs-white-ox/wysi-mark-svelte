@@ -101,9 +101,21 @@
   let CodeMirrorModule: CodeMirror;
   let updating_externally = false;
   let destroyed = false;
+  let composition: undefined | 'start' | 'update' | 'end';
 
   $: if (editor && w && h) {
     editor.refresh();
+  }
+
+  function handleComposition(state: 'start' | 'update' | 'end') {
+    return (_ev: CompositionEvent) => {
+      composition = state;
+      // trigger "change" on compositionend
+      if (state === 'end') {
+        const value = editor.getValue();
+        dispatch('change', { value, composition });
+      }
+    };
   }
 
   onMount(() => {
@@ -181,7 +193,7 @@
     editor.on('change', (instance) => {
       if (!updating_externally) {
         const value = instance.getValue();
-        dispatch('change', { value });
+        dispatch('change', { value, composition });
       }
     });
 
@@ -206,6 +218,12 @@
     return new Promise((fulfil) => setTimeout(fulfil, ms));
   }
 </script>
+
+<svelte:window
+  on:compositionstart={handleComposition('start')}
+  on:compositionupdate={handleComposition('update')}
+  on:compositionend={handleComposition('end')}
+/>
 
 <div class="codemirror-container" bind:offsetWidth={w} bind:offsetHeight={h}>
   <textarea bind:this={refs.editor} readonly {value} />

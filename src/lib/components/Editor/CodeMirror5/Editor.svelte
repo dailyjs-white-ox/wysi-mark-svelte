@@ -71,6 +71,7 @@
   bind:editor
   {value}
   on:change={({ detail }) => {
+    if (detail.composition === 'update' || detail.composition === 'start') return;
     value = detail.value;
   }}
   on:change
