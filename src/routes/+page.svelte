@@ -2,11 +2,12 @@
   import { onMount } from 'svelte';
 
   import { markdown } from '$lib/source_stores';
+  import { selecteds, type SelectedType } from '$lib/selected_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
-  import PropertiesSidebar from './PropertiesSidebar.svelte';
+  import PropertiesSidebar from '../lib/components/PropertiesSidebar/PropertiesSidebar.svelte';
   import Textarea from '$lib/components/Editor/Textarea.svelte';
   import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
   import Splitter from '$lib/components/Splitter/LeftSplitter.svelte';
@@ -19,8 +20,6 @@
   let showEditor = true;
   let showPreview = true;
   let showProperties = false;
-
-  let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
 
   let tocWidth = 200;
   let propertiesWidth = 200;
@@ -40,7 +39,7 @@
       showPreview,
     }),
     restore: (state) => {
-      $markdown = state.markdown;
+      $markdown = state.markdown ?? '';
       showToc = state.showToc;
       showEditor = state.showEditor;
       showProperties = state.showProperties;
@@ -50,8 +49,12 @@
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
     useSessionStorageSnapshot({ ...snapshot, key: 'page:source' });
 
-  function handleSelect({ detail }) {
-    selected = detail;
+  function handleSelect({ detail }: { detail: SelectedType }) {
+    $selecteds = [detail];
+  }
+  function handleSelectMore({ detail }: { detail: SelectedType }) {
+    $selecteds.push(window.structuredClone(detail));
+    $selecteds = $selecteds;
   }
 
   function toggleShowToc() {
@@ -84,8 +87,7 @@
   // run this after mount
   $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties) => {
     if (!didMount) return;
-
-    const capturedValue = captureSessionStorageSnapshot();
+    captureSessionStorageSnapshot();
   })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
@@ -110,31 +112,31 @@
       </div>
     </nav>
 
-    <section class="toc">
+    <section class="toc" aria-label="table of contents">
       {#if showToc}
-        <ContentsSidebar {selected} on:select={handleSelect} />
+        <ContentsSidebar on:select={handleSelect} on:select:more={handleSelectMore} />
       {/if}
     </section>
 
-    <section class="editor">
-      <!-- <Textarea bind:value={$markdown} /> -->
-      <CodeMirror5Editor {selected} bind:value={$markdown} />
+    <section class="editor" aria-label="source editor">
+      <!-- <Textarea /> -->
+      <CodeMirror5Editor bind:value={$markdown} />
     </section>
 
     <section class="preview" aria-label="preview" style:border-left="1px solid #676778">
       {#if showPreview}
-        <Preview {selected} on:select={handleSelect} />
+        <Preview on:select={handleSelect} on:select:more={handleSelectMore} />
       {/if}
     </section>
 
-    <section class="properties">
-      <PropertiesSidebar {selected} on:select={handleSelect} />
+    <section class="properties" aria-label="properties">
+      <PropertiesSidebar on:select={handleSelect} on:select:more={handleSelectMore} />
     </section>
 
     <SplitContainer style="grid-area: 2 / 1 / 3 / 5;" let:rect>
       {#if showToc}
         <Splitter
-          class="toc"
+          class="toc-splitter"
           borderColor="red"
           left={tocWidth}
           on:drag:end={({ detail }) => {
@@ -157,7 +159,7 @@
       {/if}
       {#if showProperties}
         <RightSplitter
-          class="properties"
+          class="properties-splitter"
           borderColor="red"
           right={propertiesWidth}
           on:drag:end:right={({ detail }) => {
@@ -232,16 +234,5 @@
   }
   main.hide-preview {
     --preview-width: 0;
-  }
-
-  /* --- */
-  .editor form {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-  .editor .buttons {
-    display: flex;
-    justify-content: flex-end;
   }
 </style>

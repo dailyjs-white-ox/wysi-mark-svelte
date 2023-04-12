@@ -1,21 +1,24 @@
 <script lang="ts">
   import CodeMirror5 from './CodeMirror5.svelte';
-  import { slideHasts } from '$lib/source_stores';
+  import { slideHasts, type SlideHastNode } from '$lib/source_stores';
+  import { selectedNode1Index, selectedNode1IndexTrace } from '$lib/selected_stores';
+  import type { EditorFromTextArea } from 'codemirror';
 
   export let value: string;
+  // $: console.log('🚀 value:', JSON.stringify(value));
+  $: if (editorComponent) {
+    editorComponent.update(value);
+  }
 
-  // selected
-  export let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
-  let slideIndex: number = 0;
-  $: slideIndex = selected?.[0] ?? 0;
-  let selectedNodeIndexTrace: number[] | undefined;
-  $: selectedNodeIndexTrace = selected?.[1];
-
-  let editorComponent; // Component
-  let editor; // CodeMirror instance
+  let editorComponent: CodeMirror5; // Component
+  let editor: EditorFromTextArea; // CodeMirror instance
 
   // scroll to slide
-  $: ((slideIndex) => {
+  $: scrollToSlide($selectedNode1Index);
+
+  function scrollToSlide(slideIndex: number) {
+    if (editor && editor.hasFocus()) return;
+
     const startPos = $slideHasts[slideIndex]?.[0]?.position?.start;
     if (!startPos) return;
 
@@ -24,38 +27,55 @@
         line: startPos.line - 1,
         ch: startPos.column - 1,
       };
-      editorComponent.setCursor(pos, { scroll: false });
+      editorComponent.setCursor(pos);
       const coords = editor.charCoords(pos, 'local');
       editor.getScrollerElement().scrollTo({ top: coords.top, behavior: 'smooth' });
     }
-  })(slideIndex);
+  }
 
-  // mark
+  // mark text
   $: ((slideIndex, nodeIndexTrace) => {
     if (!nodeIndexTrace) return;
-    // console.log( '🚀 ~ file: Editor.svelte:35 ~ nodeIndexTrace:', nodeIndexTrace, $slideHasts[slideIndex], { $slideHasts });
 
-    const selectedNode = selectNodeFromIndexTrace(slideIndex, nodeIndexTrace);
-    // console.log('🚀 ~ file: Editor.svelte:44 ~ selected node:', selectedNode, { editorComponent });
+    const selectedNode = selectNodeFromIndexTrace($slideHasts[slideIndex], nodeIndexTrace);
     if (selectedNode?.position && editorComponent) {
       const { start, end } = selectedNode.position;
+      if (start.offset === undefined || end.offset === undefined) return;
       editorComponent.unmarkText();
       editorComponent.markText({ from: start.offset, to: end.offset });
     }
-  })(slideIndex, selectedNodeIndexTrace);
+  })($selectedNode1Index, $selectedNode1IndexTrace);
 
-  function selectNodeFromIndexTrace(slideIndex: number, nodeIndexTrace: number[] | undefined) {
-    if (!nodeIndexTrace) return;
-    const slideNodes = $slideHasts[slideIndex];
+  function selectNodeFromIndexTrace(
+    slideNodes: SlideHastNode[],
+    nodeIndexTrace: number[] | undefined
+  ) {
     if (!slideNodes) return;
+    if (!nodeIndexTrace) return;
 
     let remainingIndexTrace = nodeIndexTrace.slice();
-    let node = slideNodes[remainingIndexTrace.shift()];
+    const nextIndex = remainingIndexTrace.shift();
+    if (nextIndex === undefined) return;
+    let node = slideNodes[nextIndex];
     while (node && remainingIndexTrace.length) {
-      node = node.children[remainingIndexTrace.shift()];
+      const nextIndex = remainingIndexTrace.shift();
+      if (nextIndex === undefined) break;
+      node = node.children[nextIndex];
     }
     return node;
   }
 </script>
 
-<CodeMirror5 bind:value bind:this={editorComponent} bind:editor />
+<CodeMirror5
+  bind:this={editorComponent}
+  bind:editor
+  {value}
+  on:change={({ detail }) => {
+    if (detail.composition === 'update' || detail.composition === 'start') return;
+    value = detail.value;
+  }}
+  on:change
+  on:focus={() => editorComponent.unmarkText()}
+  on:focus
+  on:blur
+/>

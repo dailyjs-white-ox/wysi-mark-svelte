@@ -6,11 +6,15 @@
 		<meta name="viewport" content="width=device-width" />
 		%sveltekit.head%
 		<style>
-			body {
-				margin: 0;
-			}
-			* {
-				box-sizing: border-box;
+			@layer reset, defaults, patterns, system, components, utilities, overrides;
+
+			@layer reset {
+				body {
+					margin: 0;
+				}
+				* {
+					box-sizing: border-box;
+				}
 			}
 		</style>
 	</head>
