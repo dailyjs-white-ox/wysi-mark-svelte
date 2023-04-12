@@ -23,6 +23,7 @@
 		"hast-util-is-element": "^2.1.3",
 		"hast-util-raw": "^8.0.0",
 		"hast-util-sanitize": "^4.1.0",
+		"hast-util-select": "^5.0.5",
 		"hast-util-to-html": "^8.0.4",
 		"hast-util-to-mdast": "^9.0.0",
 		"hast-util-to-text": "^3.1.2",
@@ -37,6 +38,7 @@
 		"remark-rehype": "^10.1.0",
 		"unified": "^10.1.2",
 		"unist-util-filter": "^4.0.1",
+		"unist-util-remove-position": "^4.0.2",
 		"vfile": "^5.3.7"
 	},
 	"devDependencies": {
