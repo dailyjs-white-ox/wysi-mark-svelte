@@ -17,6 +17,7 @@ import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-
 import { toMdast, type Options as ToMdastOptions } from 'hast-util-to-mdast';
 import { toMarkdown, type Options as ToMarkdownOptions } from 'mdast-util-to-markdown';
 import type { HastElement, HastText } from 'mdast-util-to-hast/lib/state';
+import { removeBlankTextNodes as hastRemoveBlankTextNodes } from './source';
 
 export type { HastNodes, HastContent };
 
@@ -48,13 +49,19 @@ function turnMdastToSanitizedHast(mdastTree: MdastRoot, source: string): HastNod
 
 // markdown-driven
 
-export const markdown = writable('');
+export const markdown = (() => {
+  const store = writable('');
 
-export function replaceMarkdown({ start, end }: { start: number; end: number }, value: string) {
-  markdown.update(($markdown) => {
-    return $markdown.slice(0, start) + value + $markdown.slice(end);
-  });
-}
+  /** Update store on specific range */
+  function updateAt({ start, end }: { start: number; end: number }, value: string) {
+    store.update(($markdown) => $markdown.slice(0, start) + value + $markdown.slice(end));
+  }
+
+  return {
+    ...store,
+    updateAt,
+  };
+})();
 
 // hast
 
@@ -81,13 +88,8 @@ export const html = derived(hast, ($hast) => toHtml($hast, { allowDangerousHtml:
 export type SlideHastNode = Exclude<HastContent, { type: 'comment' } | { type: 'doctype' }>;
 
 export const slideHasts: Readable<SlideHastNode[][]> = derived(hast, ($hast) => {
-  // normalize children - remove blank text nodes, throughout the tree
-  const { children } = filter($hast, null, (node) => {
-    if (node.type === 'text' && node.value.trim() === '') {
-      return false;
-    }
-    return true;
-  }) as HastRoot;
+  // normalize children
+  const { children } = hastRemoveBlankTextNodes($hast);
 
   // group nodes by HR node
   const groups: SlideHastNode[][] = children.reduce<SlideHastNode[][]>(
@@ -131,44 +133,6 @@ function assignNodeIndexTrace(nodes: HastContent[], ancestorTrace: number[] = []
     node.properties.dataNodeIndexTrace = [...ancestorTrace, index].join('.');
     assignNodeIndexTrace(node.children, [...ancestorTrace, index]);
   });
-}
-
-export function hastToMarkdown(
-  node: HastNodes,
-  options?: { mdast?: ToMdastOptions; markdown?: ToMarkdownOptions }
-): string {
-  const mdast = toMdast(node, options?.mdast);
-  const markdown = toMarkdown(mdast, options?.markdown);
-  return markdown;
-}
-
-export function hastText(value: string): HastText {
-  return { type: 'text', value };
-}
-
-/**
- * Convert hast element to markdown, but render the outer tag as HTML.
- */
-export function hastToMarkdownWithHtmlHead(node: HastElement, properties = {}): string {
-  // keep children in markdown as text
-  const children = [
-    hastText(
-      node.children
-        .map((childNode) => hastToMarkdown(childNode))
-        .join('\n')
-        .trim()
-    ),
-  ];
-
-  // hast node with children rendered as markdown
-  const newHastNode = {
-    ...node,
-    properties: { ...node.properties, ...properties },
-    children,
-  };
-
-  const source = toHtml(newHastNode);
-  return source;
 }
 
 // FIXME: deprecate me
