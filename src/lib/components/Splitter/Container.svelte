@@ -6,12 +6,10 @@
 
   export let style = '';
 
-  // let rect: DOMRect;
   let rectStore: Writable<DOMRect> = writable();
+  setContext('splitter', rectStore);
 
   let element: HTMLElement;
-
-  setContext('splitter', rectStore);
 
   onMount(() => {
     $rectStore = element.getBoundingClientRect();
