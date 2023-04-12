@@ -29,6 +29,8 @@
   $: propertiesWidth = showProperties ? 200 : 0;
   $: tocWidth = showToc ? 200 : 0;
 
+  let editorWidthRatio = 0.5;
+
   export const snapshot: Snapshot = {
     capture: () => ({
       markdown: $markdown,
@@ -118,7 +120,8 @@
       <!-- <Textarea bind:value={$markdown} /> -->
       <CodeMirror5Editor {selected} bind:value={$markdown} />
     </section>
-    <section class="preview">
+
+    <section class="preview" aria-label="preview" style:border-left="1px solid #676778">
       {#if showPreview}
         <Preview {selected} on:select={handleSelect} />
       {/if}
@@ -128,7 +131,7 @@
       <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
 
-    <SplitContainer style="grid-area: 2 / 1 / 3 / 5;">
+    <SplitContainer style="grid-area: 2 / 1 / 3 / 5;" let:rect>
       {#if showToc}
         <Splitter
           class="toc"
@@ -136,6 +139,19 @@
           left={tocWidth}
           on:drag:end={({ detail }) => {
             tocWidth = detail.offsetX;
+          }}
+        />
+      {/if}
+      {#if showPreview}
+        <Splitter
+          class="preview-splitter"
+          borderColor="#676778"
+          visible={false}
+          left={`calc((100% - ${tocWidth}px - ${propertiesWidth}px) * ${editorWidthRatio})`}
+          on:drag:end={({ detail }) => {
+            console.log('🚀 ~ file: +page.svelte:156 ~ detail:', detail.offsetX, { detail, rect });
+            // editorWidthRatio = detail.offsetX - tocWidth;
+            editorWidthRatio = detail.offsetX / (rect.width - tocWidth - propertiesWidth);
           }}
         />
       {/if}
@@ -158,6 +174,8 @@
   main {
     --toc-width: 200px;
     --properties-width: 200px;
+    --editor-width: minmax(0, 1fr);
+    --preview-width: minmax(0, 1fr);
   }
   /* positions & sizes */
   main {

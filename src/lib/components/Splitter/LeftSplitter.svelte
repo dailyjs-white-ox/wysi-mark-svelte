@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
   import { draggable } from '@neodrag/svelte';
+
   type DragEventData = {
     /** How much element moved from its original position horizontally */
     offsetX: number;
@@ -22,8 +23,35 @@
   export { className as class };
   export let borderColor: string | undefined = undefined;
 
+  export let disabled = false;
+  export let visible = true;
+
+  export let left: number | string | undefined = undefined;
+
   let leftPx: number | undefined = undefined;
-  export { leftPx as left };
+
+  let phantom = false;
+  let phantomEl: HTMLElement;
+  $: if (typeof left === 'string') {
+    console.log('🚀 left:', left);
+    getPhantomLeft(left).then((value) => {
+      leftPx = value;
+    });
+  } else {
+    leftPx = left;
+  }
+
+  async function getPhantomLeft(left: string) {
+    phantom = true;
+
+    await tick();
+    const phantomRect = phantomEl?.getBoundingClientRect();
+    if (!phantomRect) return;
+    console.log('phantom left:', phantomRect.left, { left, phantomEl, phantomRect });
+    phantom = false;
+
+    return phantomRect.left;
+  }
 
   let widthPx: number | undefined = undefined;
   $: width = unlessUndefined(widthPx, (value) => `${value}px`);
@@ -37,20 +65,28 @@
   }
 </script>
 
-<div
-  class:splitter={true}
-  class={className}
-  style:--border-color={borderColor}
-  use:draggable={{
-    axis: 'x',
-    position: { x: leftPx ?? 0, y: 0 },
-  }}
-  on:neodrag:start={(e) => dispatchEvent('drag:start', e.detail)}
-  on:neodrag:end={(e) => dispatchEvent('drag:end', e.detail)}
-  on:neodrag={(e) => dispatchEvent('drag', e.detail)}
->
-  <div class="inner-line" />
-</div>
+{#if visible}
+  <div
+    class:splitter={true}
+    class:disabled
+    class={className}
+    style:--border-color={borderColor}
+    style={width === undefined ? '' : `--line-width={width}`}
+    use:draggable={{
+      axis: 'x',
+      position: { x: leftPx ?? 0, y: 0 },
+      disabled,
+    }}
+    on:neodrag:start={(e) => dispatchEvent('drag:start', e.detail)}
+    on:neodrag:end={(e) => dispatchEvent('drag:end', e.detail)}
+    on:neodrag={(e) => dispatchEvent('drag', e.detail)}
+  >
+    <div class="inner-line" />
+  </div>
+  {#if phantom}
+    <div bind:this={phantomEl} class="splitter phantom" style:visibility="hidden" style:left />
+  {/if}
+{/if}
 
 <style>
   .splitter {
@@ -67,9 +103,9 @@
     width: var(--entire-width, 5px);
     pointer-events: auto;
   }
-  .splitter:hover {
+  .splitter:not(.disabled):hover {
     cursor: col-resize;
-    background-color: rgba(255, 0, 255, 0.5);
+    background-color: var(--background-color, rgba(255, 0, 255, 0.5));
   }
 
   .inner-line {
