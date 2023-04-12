@@ -39,7 +39,7 @@
       showPreview,
     }),
     restore: (state) => {
-      $markdown = state.markdown;
+      $markdown = state.markdown ?? '';
       showToc = state.showToc;
       showEditor = state.showEditor;
       showProperties = state.showProperties;
@@ -87,8 +87,7 @@
   // run this after mount
   $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties) => {
     if (!didMount) return;
-
-    const capturedValue = captureSessionStorageSnapshot();
+    captureSessionStorageSnapshot();
   })($markdown, showToc, showEditor, showPreview, showProperties);
 </script>
 
@@ -113,13 +112,13 @@
       </div>
     </nav>
 
-    <section class="toc">
+    <section class="toc" aria-label="table of contents">
       {#if showToc}
         <ContentsSidebar on:select={handleSelect} on:select:more={handleSelectMore} />
       {/if}
     </section>
 
-    <section class="editor">
+    <section class="editor" aria-label="source editor">
       <!-- <Textarea /> -->
       <CodeMirror5Editor bind:value={$markdown} />
     </section>
@@ -130,14 +129,14 @@
       {/if}
     </section>
 
-    <section class="properties">
+    <section class="properties" aria-label="properties">
       <PropertiesSidebar on:select={handleSelect} on:select:more={handleSelectMore} />
     </section>
 
     <SplitContainer style="grid-area: 2 / 1 / 3 / 5;" let:rect>
       {#if showToc}
         <Splitter
-          class="toc"
+          class="toc-splitter"
           borderColor="red"
           left={tocWidth}
           on:drag:end={({ detail }) => {
@@ -160,7 +159,7 @@
       {/if}
       {#if showProperties}
         <RightSplitter
-          class="properties"
+          class="properties-splitter"
           borderColor="red"
           right={propertiesWidth}
           on:drag:end:right={({ detail }) => {
@@ -235,16 +234,5 @@
   }
   main.hide-preview {
     --preview-width: 0;
-  }
-
-  /* --- */
-  .editor form {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-  .editor .buttons {
-    display: flex;
-    justify-content: flex-end;
   }
 </style>

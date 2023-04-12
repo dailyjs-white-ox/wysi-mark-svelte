@@ -248,6 +248,7 @@
 
   .codemirror-container :global(.CodeMirror) {
     height: 100%;
+    /* font: 400 calc(var(--code-fs)) / 1.7 var(--font-mono); */
     font: 400 calc(var(--code-fs) * 0.625) / 1.7 var(--font-mono);
   }
 
