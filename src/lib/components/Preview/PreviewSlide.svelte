@@ -1,7 +1,10 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { toHtml } from 'hast-util-to-html';
+
+  import { buildSlideIndexClassName } from './utils';
   import type { HastContent } from 'mdast-util-to-hast/lib';
+
   const dispatchEvent = createEventDispatcher();
 
   export let slideIndex = 0;
@@ -46,7 +49,8 @@
 
 <article
   bind:this={ref}
-  class={`slide slide-index-${slideIndex}`}
+  class={buildSlideIndexClassName(slideIndex)}
+  class:slide={true}
   class:selected-slide={isSelected}
   tabindex="-1"
   on:keydown
