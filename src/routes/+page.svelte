@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { draggable } from '@neodrag/svelte';
+
   import { markdown } from '$lib/source_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
@@ -8,6 +10,9 @@
   import PropertiesSidebar from './PropertiesSidebar.svelte';
   import Textarea from '$lib/components/Editor/Textarea.svelte';
   import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
+  import Splitter from '$lib/components/Splitter/LeftSplitter.svelte';
+  import RightSplitter from '$lib/components/Splitter/RightSplitter.svelte';
+  import SplitContainer from '$lib/components/Splitter/Container.svelte';
   import type { Snapshot } from './$types';
 
   let showPresentation = false;
@@ -17,6 +22,10 @@
   let showProperties = false;
 
   let selected: [number, number[]?, { source: 'Preview'; timestamp: Number }?] | undefined;
+
+  let tocWidth = 200;
+  let propertiesWidth = 200;
+  $: propertiesWidth = showProperties ? 200 : 0;
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -65,6 +74,8 @@
     class:hide-editor={!showEditor}
     class:hide-preview={!showPreview}
     class:hide-properties={!showProperties}
+    style:--toc-width={`${tocWidth}px`}
+    style:--properties-width={`${propertiesWidth}px`}
   >
     <nav class="navigator">
       <div>
@@ -77,11 +88,13 @@
         <button on:click={() => (showProperties = !showProperties)}>Properties</button>
       </div>
     </nav>
+
     <section class="toc">
       {#if showToc}
         <ContentsSidebar {selected} on:select={handleSelect} />
       {/if}
     </section>
+
     <section class="editor">
       <!-- <Textarea bind:value={$markdown} /> -->
       <CodeMirror5Editor {selected} bind:value={$markdown} />
@@ -91,13 +104,42 @@
         <Preview {selected} on:select={handleSelect} />
       {/if}
     </section>
+
     <section class="properties">
       <PropertiesSidebar {selected} on:select={handleSelect} />
     </section>
+
+    <SplitContainer style="grid-area: 2 / 1 / 3 / 5;">
+      {#if showToc}
+        <Splitter
+          class="toc"
+          borderColor="red"
+          left={tocWidth}
+          on:drag:end={({ detail }) => {
+            tocWidth = detail.offsetX;
+          }}
+        />
+      {/if}
+      {#if showProperties}
+        <RightSplitter
+          class="properties"
+          borderColor="red"
+          right={propertiesWidth}
+          on:drag:end:right={({ detail }) => {
+            propertiesWidth = detail.offsetRight;
+          }}
+        />
+      {/if}
+    </SplitContainer>
   </main>
 {/if}
 
 <style>
+  /* custom properties */
+  main {
+    --toc-width: 200px;
+    --properties-width: 200px;
+  }
   /* positions & sizes */
   main {
     height: 100%;
@@ -112,13 +154,18 @@
     display: grid;
     grid-template-rows: 50px 1fr;
     grid-template-columns:
-      var(--toc-width, 200px)
+      var(--toc-width, 0)
       var(--editor-width, minmax(0, 1fr))
       var(--preview-width, minmax(0, 1fr))
-      var(--properties-width, 200px);
+      var(--properties-width, 0);
+    grid-template-areas:
+      'nav nav nav nav'
+      'toc editor preview properties'
+      'footer footer footer footer';
   }
   .navigator {
-    grid-area: 1 / 1 / 2 / -1;
+    /* grid-area: 1 / 1 / 2 / -1; */
+    grid-area: nav;
     display: flex;
     justify-content: space-between;
     padding: 0 4px;
@@ -127,16 +174,20 @@
     color: white;
   }
   .toc {
-    grid-area: 2 / 1 / 3 / 2;
+    /* grid-area: 2 / 1 / 3 / 2; */
+    grid-area: toc;
   }
   .editor {
-    grid-area: 2 / 2 / 3 / 3;
+    /* grid-area: 2 / 2 / 3 / 3; */
+    grid-area: editor;
   }
   .preview {
-    grid-area: 2 / 3 / 3 / 4;
+    /* grid-area: 2 / 3 / 3 / 4; */
+    grid-area: preview;
   }
   .properties {
-    grid-area: 2 / 4 / 3 / 5;
+    /* grid-area: 2 / 4 / 3 / 5; */
+    grid-area: properties;
   }
 
   main.hide-toc {
