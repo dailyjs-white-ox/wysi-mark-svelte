@@ -1,17 +1,15 @@
 import { inspect } from 'node:util';
-import { h } from 'hastscript';
 import { describe, it, expect } from 'vitest';
-import { hastInsertStyle, hastText, removeBlankTextNodes, replaceMarkdownAt } from './source';
+
 import { fromHtml } from 'hast-util-from-html';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toHast } from 'mdast-util-to-hast';
 import { toHtml } from 'hast-util-to-html';
 import { removePosition } from 'unist-util-remove-position';
 import { select } from 'hast-util-select';
-import type { HastRoot } from 'mdast-util-to-hast/lib';
-import type { HastElement } from 'mdast-util-to-hast/lib/state';
+import type { HastRoot, HastElement } from 'mdast-util-to-hast/lib/state';
 import type { Node } from 'hast';
-import { toMarkdown } from 'mdast-util-to-markdown';
+import { hastInsertStyle, removeBlankTextNodes, replaceMarkdownAt, trimLeads } from './source';
 
 describe('hastInsertStyle', () => {
   it('convert p tag to html', () => {
@@ -28,7 +26,7 @@ describe('hastInsertStyle', () => {
     expect(mdSource).toEqual('<p style="color: blue;">abc</p>');
   });
 
-  describe('li tag', () => {
+  describe('inline', () => {
     it('wrap li tag inner with html', () => {
       const markdownSource = [
         //
@@ -73,8 +71,8 @@ describe('hastInsertStyle', () => {
     });
   });
 
-  describe('ul tag', () => {
-    it('wrap ul tag inner with html', () => {
+  describe('block', () => {
+    it('wraps ul tag inner with html', () => {
       const markdownSource = [
         //
         'some text',
@@ -110,14 +108,92 @@ describe('hastInsertStyle', () => {
 
       // verify converted part
       const [pos, targetMarkdown] = result;
-      const expectedTargetMarkdown = trimLeads(`
+      const expectedTargetMarkdown = trimLeads(
+        `
           <div class="ul-inner-wrapper" style="color: blue;">
 
           - 1st item
           - 2nd item
-          </div>`);
-      //console.log('Expected:', format(expectedTargetMarkdown));
-      //console.log('Actual  :', format(targetMarkdown));
+          </div>`,
+        { removeBlankFirstLine: true }
+      ).trim();
+      // console.log('Expected:', format(expectedTargetMarkdown));
+      // console.log('Actual  :', format(targetMarkdown));
+      expect(targetMarkdown).toEqual(expectedTargetMarkdown);
+
+      // verify entire markdown
+      const entireMarkdown = replaceMarkdownAt(markdownSource, pos, targetMarkdown);
+      const expectedEntireMarkdown = trimLeads(
+        `
+          some text
+
+          <div class="ul-inner-wrapper" style="color: blue;">
+
+          - 1st item
+          - 2nd item
+          </div>`,
+        { removeBlankFirstLine: true }
+      ).trim();
+      // console.log('expected:', format(expectedEntireMarkdown));
+      // console.log('actual  :', format(entireMarkdown));
+      expect(trimLeads(entireMarkdown)).toEqual(expectedEntireMarkdown);
+    });
+
+    it('keeps indent of parent', () => {
+      const markdownSource = trimLeads(
+        `
+        some text
+
+        * parent list
+          - 1st item of child list
+          - 2nd item of child list
+        * ending list item
+      `.trimEnd()
+      );
+      const mdast = fromMarkdown(markdownSource);
+      let hastNode = toHast(mdast) as HastRoot;
+      hastNode = removeBlankTextNodes(hastNode);
+      // console.log('🚀 hastNode:', format(hastNode, { removePosition: false }));
+
+      // verify rendered HTML
+      const htmlSource = toHtml(hastNode);
+      const expectedHtmlSource = normalizeHtml(
+        `
+        <p>some text</p>
+        <ul>
+          <li>parent list<ul>
+              <li>1st item of child list</li>
+              <li>2nd item of child list</li>
+            </ul>
+          </li>
+          <li>ending list item</li>
+        </ul>
+        `
+      );
+      // console.log('Expected:', format(expectedHtmlSource));
+      // console.log('Actual  :', format(normalizeHtml(htmlSource)));
+      expect(normalizeHtml(htmlSource)).toEqual(expectedHtmlSource);
+
+      //
+      const childUlNode = select('ul ul', hastNode);
+      // console.log('childUlNode:', format(childUlNode, { removePosition: false }));
+      const result = hastInsertStyle(childUlNode as HastElement, 'color: blue;', markdownSource);
+      expect(result).not.toBeUndefined();
+      if (result === undefined) return;
+
+      const [pos, targetMarkdown] = result;
+
+      // verify converted part
+      const expectedTargetMarkdown = trimLeads(
+        `
+         <div class="ul-inner-wrapper" style="color: blue;">
+
+           - 1st item of child list
+           - 2nd item of child list
+           </div>`
+      ).trim();
+      // console.log('Expected:', format(expectedTargetMarkdown));
+      // console.log('Actual  :', format(targetMarkdown));
       expect(targetMarkdown).toEqual(expectedTargetMarkdown);
 
       // verify entire markdown
@@ -125,42 +201,42 @@ describe('hastInsertStyle', () => {
       const expectedEntireMarkdown = trimLeads(`
           some text
 
-          <div class="ul-inner-wrapper" style="color: blue;">
+          * parent list
+            <div class="ul-inner-wrapper" style="color: blue;">
 
-          - 1st item
-          - 2nd item
-          </div>`);
+            - 1st item of child list
+            - 2nd item of child list
+            </div>
+          * ending list item`);
       // console.log('expected:', format(expectedEntireMarkdown));
       // console.log('actual  :', format(entireMarkdown));
-      expect(trimLeads(entireMarkdown)).toEqual(expectedEntireMarkdown);
+      expect(entireMarkdown).toEqual(expectedEntireMarkdown);
     });
   });
 });
 
 // helpers
 
-function trimLeads(str: string): string {
-  const lines = str.split('\n');
-  if (lines.length > 0 && lines[0].trim().length === 0) {
-    lines.shift();
-  }
-  const lengths = lines
-    .map((line) => {
-      if (line.length === 0) return;
-      const match = line.match(/^\s*/);
-      if (!match) return;
-      return match[0].length;
-    })
-    .filter((length) => length !== undefined) as number[];
-  const minLeadingSpace = Math.min(...lengths);
-  // console.log('🚀 trimLeads ~ minLeadingSpace:', minLeadingSpace, { lengths, lines });
-  return lines.map((line) => line.slice(minLeadingSpace)).join('\n');
-}
+function normalizeHtml(htmlSource: string, options = {}) {
+  const { verbose } = { verbose: false, ...options };
 
-function normalizeHtml(htmlSource: string) {
   const hast = fromHtml(htmlSource, { fragment: true });
   const hast2 = removeBlankTextNodes(hast);
-  return toHtml(hast2, { allowDangerousHtml: true });
+  const html2 = toHtml(hast2, { allowDangerousHtml: true });
+  if (verbose) {
+    console.log(
+      '🚀 ~ file: source.spec.ts:229 ~ normalizeHtml ~ hast:',
+      format(html2),
+      format(
+        {
+          hast: removePosition(hast, { force: true }),
+          hast2: removePosition(hast2, { force: true }),
+        },
+        { depth: null }
+      )
+    );
+  }
+  return html2;
 }
 
 type FormatOptions = {
@@ -213,25 +289,8 @@ function format(arg: unknown, options: Partial<FormatOptions> = {}): unknown {
     ) {
       arg = removePosition(structuredClone(arg) as Node, { force: true });
     }
-    //const entries = Object.entries(arg);
-    //const entries2 = entries.map(([key, value]) => [
-    //  key,
-    //  format(value, { ...options, nested: nested + 1 }),
-    //]);
-    //// return Object.fromEntries(entries2);
-    //// return inspect(Object.fromEntries(entries2), { depth });
-    // arg = Object.fromEntries(entries2);
-    // console.dir(arg);
   }
 
   // default behavior
   return inspect(arg, { depth, colors });
-}
-
-function dir(...args: unknown[]) {
-  const options: { nested?: boolean; removePosition?: boolean } = {};
-  // options.removePosition = true;
-
-  console.log(...args.map((arg) => format(arg, options)));
-  // console.log(args.map((x) => inspect(x)));
 }
