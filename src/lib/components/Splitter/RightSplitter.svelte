@@ -9,16 +9,14 @@
   const rect = getContext<Writable<DOMRect>>('splitter');
 
   export let right: number | undefined = undefined;
-  $: left = right === undefined ? undefined : $rect.width - right;
+  $: left = right === undefined || $rect === undefined ? undefined : $rect.width - right;
 
   // make sure left is re-calculated on rect change (such as resize)
   rect.subscribe(($rect) => {
+    if (!$rect) return;
+
     const prevLeft = left;
     left = right === undefined ? undefined : $rect.width - right;
-    console.log('resize, recomputing left:', Math.floor(prevLeft), '=>', Math.floor(left), {
-      $rect,
-      right,
-    });
   });
 </script>
 
