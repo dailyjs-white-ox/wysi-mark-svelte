@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
+  import { scrollIntoView } from 'seamless-scroll-polyfill';
 
   import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
@@ -48,7 +49,9 @@
   $: ((slideIndex) => {
     const selectedSlide = ref?.querySelector(`.${buildSlideIndexClassName(slideIndex)}`);
     if (selectedSlide) {
-      selectedSlide.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      console.log('scroll:', slideIndex, selectedSlide);
+      // selectedSlide.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      scrollIntoView(selectedSlide, { behavior: 'smooth', inline: 'center' });
     }
   })(slideIndex);
 </script>
@@ -111,8 +114,9 @@
 
     padding: 20px;
     background-color: #ccc;
-    overflow-x: auto;
     overflow-y: hidden;
+    overflow-x: scroll;
+    scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
   }
 

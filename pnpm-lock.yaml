@@ -76,6 +76,9 @@ dependencies:
   remark-rehype:
     specifier: ^10.1.0
     version: 10.1.0
+  seamless-scroll-polyfill:
+    specifier: ^2.3.4
+    version: 2.3.4
   unified:
     specifier: ^10.1.2
     version: 10.1.2
@@ -2579,6 +2582,10 @@ packages:
     dependencies:
       xmlchars: 2.2.0
     dev: true
+
+  /seamless-scroll-polyfill@2.3.4:
+    resolution: {integrity: sha512-Biobd4LDoeFODX1bfiru84GveSajzFELFB3ejMZsRR2TpD73W46uEZYAEqSx5RtKpN2umhGWaoSRivs0ZcHp9g==}
+    dev: false
 
   /semver@7.3.8:
     resolution: {integrity: sha512-NB1ctGL5rlHrPJtFDVIVzTyQylMLu9N9VICA6HSFJo8MCGVTMW6gfpicwKmmK/dAjTOrqu5l63JJOpDSrAis3A==}
