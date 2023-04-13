@@ -16,6 +16,9 @@ dependencies:
   '@types/mdast':
     specifier: ^3.0.11
     version: 3.0.11
+  '@types/unist':
+    specifier: ^2.0.6
+    version: 2.0.6
   codemirror:
     specifier: ^5
     version: 5.65.12

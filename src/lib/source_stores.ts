@@ -12,16 +12,12 @@ import { sanitize, defaultSchema } from 'hast-util-sanitize';
 import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { isElement } from 'hast-util-is-element';
-import { filter } from 'unist-util-filter';
 import { toText } from 'hast-util-to-text';
-import type { HastRoot, HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
-import { toMdast, type Options as ToMdastOptions } from 'hast-util-to-mdast';
-import { toMarkdown, type Options as ToMarkdownOptions } from 'mdast-util-to-markdown';
-import type { HastElement, HastText } from 'mdast-util-to-hast/lib/state';
-import { removeBlankTextNodes as hastRemoveBlankTextNodes } from './source';
+import type { HastNodes, HastContent, MdastRoot } from 'mdast-util-to-hast/lib/index.js';
 
 import { buildSlideIndexClassName } from './components/Preview/utils';
 import { prependSelector } from './utils/cssparse';
+import { removeBlankTextNodes } from './source/hast/utils';
 
 export type { HastNodes, HastContent };
 
@@ -93,7 +89,7 @@ export type SlideHastNode = Exclude<HastContent, { type: 'comment' } | { type: '
 
 export const slideHasts: Readable<SlideHastNode[][]> = derived(hast, ($hast) => {
   // normalize children
-  const { children } = hastRemoveBlankTextNodes($hast);
+  const { children } = removeBlankTextNodes($hast);
 
   // group nodes by HR node
   const slideGroups: HastContent[][] = children.reduce<HastContent[][]>(
