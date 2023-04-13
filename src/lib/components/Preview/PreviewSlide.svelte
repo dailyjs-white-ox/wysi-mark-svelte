@@ -83,6 +83,8 @@
 <style>
   @layer system {
     article.slide {
+      scroll-snap-align: center;
+
       overflow-y: auto;
       min-width: calc(100% - 40px);
       background-color: white;

@@ -113,6 +113,7 @@
     background-color: #ccc;
     overflow-x: auto;
     overflow-y: hidden;
+    scroll-snap-type: x mandatory;
   }
 
   input[type='number'][name='slide-index'] {
