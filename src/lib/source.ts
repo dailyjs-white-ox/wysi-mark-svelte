@@ -43,21 +43,22 @@ export function hastText(value: string): HastText {
 /**
  * Convert hast element to markdown, but render the outer tag as HTML.
  *
- *
  */
 export function hastToMarkdownWithHtmlHead(
   node: HastElement,
   properties: {},
   childrenMarkdown: string
 ): string {
+  let propEntries = Object.entries({ ...node.properties, ...properties });
   // ignore prop starting with data
-  const nodeProperties = Object.fromEntries(
-    Object.entries(node.properties ?? {}).filter(([key, value]) => !key.startsWith('data'))
-  );
+  propEntries = propEntries.filter(([key, value]) => !key.startsWith('data'));
+  // ignore prop with empty data
+  propEntries = propEntries.filter(([key, value]) => value);
 
+  properties = Object.fromEntries(propEntries);
   const newHastNode: HastElement = {
     ...node,
-    properties: { ...nodeProperties, ...properties },
+    properties,
     children: [hastText(childrenMarkdown)],
   };
 
