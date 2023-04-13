@@ -2,12 +2,12 @@
   import { createEventDispatcher } from 'svelte';
   import { toText } from 'hast-util-to-text';
 
-  import type { HastContent, HastNodes, HastElement, HastText } from 'mdast-util-to-hast/lib/state';
+  import type { HastText } from 'mdast-util-to-hast/lib/state';
+
   import { markdown, type SlideHastNode } from '$lib/source_stores';
+  import type { WithTarget } from '$lib/utils/types';
 
   const dispatchEvent = createEventDispatcher<{ select: number[]; 'select:more': number[] }>();
-
-  type WithTarget<Event, Target> = Event & { currentTarget: Target };
 
   export let hastNodes: SlideHastNode[];
   export let depth = 0;
