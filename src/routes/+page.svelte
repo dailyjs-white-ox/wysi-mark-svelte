@@ -47,7 +47,7 @@
     },
   };
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
-    useSessionStorageSnapshot({ ...snapshot, key: 'page:source' });
+    useSessionStorageSnapshot('wysimark:page', snapshot);
 
   function handleSelect({ detail }: { detail: SelectedType }) {
     $selecteds = [detail];
