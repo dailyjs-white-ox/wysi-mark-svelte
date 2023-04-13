@@ -6,6 +6,8 @@
   export let node: HastElement;
   $: styleText = (node.properties?.style ?? '') as string;
 
+  $: styleText = (node.properties?.style ?? '') as string;
+
   function submit() {
     const result = hastInsertStyle(node, styleText, $markdown);
     if (result) {
@@ -29,8 +31,9 @@
         node.properties.style = ev.currentTarget.value;
       }}
       on:keydown={(ev) => {
+        // submit the form
         if (ev.metaKey && ev.key === 'Enter') {
-          submit();
+          ev.currentTarget.form?.requestSubmit();
         }
       }}
     />
