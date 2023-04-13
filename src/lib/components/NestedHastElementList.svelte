@@ -2,37 +2,81 @@
   import { createEventDispatcher } from 'svelte';
   import { toText } from 'hast-util-to-text';
 
-  import type { HastText } from 'mdast-util-to-hast/lib/state';
+  import type { HastElement, HastText } from 'mdast-util-to-hast/lib/state';
 
   import { markdown, type SlideHastNode } from '$lib/source_stores';
   import type { WithTarget } from '$lib/utils/types';
+  import type { NodeIndexTrace, SelectedSourceDetail } from '$lib/selected_stores';
+  import { firstLine } from '$lib/source_helpers';
+  import { checkStyleWrapperElement } from '$lib/source/hast/style_wrapper';
 
   const dispatchEvent = createEventDispatcher<{ select: number[]; 'select:more': number[] }>();
 
   export let hastNodes: SlideHastNode[];
   export let depth = 0;
 
-  // export let selectedNodeIndexTrace: number[] | undefined = undefined;
-  export let selectedNodeIndexTraces: number[][] = [];
+  // export let selectedNodeIndexTraces: NodeIndexTrace[] = [];
+  export let selectedNodeIndexTraces2: [NodeIndexTrace, SelectedSourceDetail][] = [];
 
-  $: nodeSelectedMap = hastNodes.reduce<{ [nodeIndex: number]: boolean }>((memo, _, nodeIndex) => {
-    memo[nodeIndex] = Boolean(
-      selectedNodeIndexTraces.find(
-        (nodeTrace) => nodeTrace.length === 1 && nodeTrace[0] === nodeIndex
-      )
-    );
+  // { [nodeIndex] => boolean }
+  //$: nodeSelectedMap = hastNodes.reduce<{ [nodeIndex: number]: boolean }>((memo, _, nodeIndex) => {
+  //  const match = selectedNodeIndexTraces.find(
+  //    (trace) => trace.length === 1 && trace[0] === nodeIndex
+  //  );
+  //  memo[nodeIndex] = Boolean(match);
+  //  return memo;
+  //}, {});
+
+  // { [nodeIndex] => boolean }
+  // $: nextSelectedNodeIndexTracesMap = hastNodes.reduce<{ [nodeIndex: number]: NodeIndexTrace[] }>(
+  //   (memo, _, nodeIndex) => {
+  //     memo[nodeIndex] = selectedNodeIndexTraces
+  //       .filter((trace) => trace[0] === nodeIndex)
+  //       .map((trace) => trace.slice(1));
+  //     return memo;
+  //   },
+  //   {}
+  // );
+
+  function checkTraceMatch(
+    [trace, source]: [NodeIndexTrace, SelectedSourceDetail],
+    hastNode: SlideHastNode,
+    nodeIndex: number
+  ) {
+    if (trace.length === 1 && trace[0] === nodeIndex) {
+      return true;
+    }
+
+    if (trace.length === 2) {
+      const wrapperType = checkStyleWrapperElement(hastNode);
+      if (
+        wrapperType === 'outer' &&
+        hastNode.type === 'element' &&
+        source.source !== 'Properties'
+      ) {
+        const { children } = hastNode;
+        if (children.length === 1) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  $: nodeSelectedMap = hastNodes.reduce((memo, node, nodeIndex) => {
+    const match = selectedNodeIndexTraces2.find((tuple) => checkTraceMatch(tuple, node, nodeIndex));
+    memo[nodeIndex] = Boolean(match);
     return memo;
-  }, {});
-
-  $: nextSelectedNodeIndexTracesMap = hastNodes.reduce<{ [nodeIndex: number]: number[][] }>(
-    (memo, _, nodeIndex) => {
-      memo[nodeIndex] = selectedNodeIndexTraces
-        .filter((nodeTrace) => nodeTrace[0] === nodeIndex)
-        .map((nodeTrace) => nodeTrace.slice(1));
-      return memo;
-    },
-    {}
-  );
+  }, {} as Record<number, boolean>);
+  // next level
+  $: nextSelectedNodeIndexTracesMap2 = hastNodes.reduce((memo, _, nodeIndex) => {
+    const currentIndexTraces2 = selectedNodeIndexTraces2.filter(
+      ([trace]) => !nodeSelectedMap[nodeIndex] && trace[0] === nodeIndex
+    );
+    memo[nodeIndex] = currentIndexTraces2.map(([trace, source]) => [trace.slice(1), source]);
+    return memo;
+  }, {} as Record<number, [NodeIndexTrace, SelectedSourceDetail][]>);
 
   // ui states
 
@@ -47,23 +91,16 @@
     }
   }
 
-  //// open selected node
-  //$: {
-  //  //if (selectedNodeIndexTrace && selectedNodeIndexTrace.length > 0) {
-  //  //  nodesOpen[selectedNodeIndexTrace[0]] = true;
-  //  //}
-  //  selectedNodeIndexTraces.forEach((selectedNodeIndexTrace) => {
-  //    nodesOpen[selectedNodeIndexTrace[0]] = true;
-  //  });
-  //}
-
-  function firstLine(text: string | null): string {
-    if (!text) return '';
-    const lines = text.trim().split('\n');
-    if (lines.length === 0) {
-      return text;
-    }
-    return lines[0] + `... (${lines.length} lines)`;
+  // open selected node
+  $: {
+    // selectedNodeIndexTraces.forEach((selectedNodeIndexTrace) => {
+    //   nodesOpen[selectedNodeIndexTrace[0]] = true;
+    // });
+    selectedNodeIndexTraces2.forEach(([trace, source]) => {
+      if (source.source !== 'Properties') {
+        nodesOpen[trace[0]] = true;
+      }
+    });
   }
 
   function toggleOpen(index: number) {
@@ -85,7 +122,7 @@
     const target = ev.target as HTMLElement;
     if (['INPUT', 'BUTTON', 'TEXTAREA', 'CODE'].includes(target.tagName)) return;
     const { metaKey } = ev;
-    console.log('click', target.tagName, { metaKey, ev });
+    // console.log('click', target.tagName, { metaKey, ev });
     if (metaKey) {
       triggerSelectMore(nodeIndex);
     } else {
@@ -151,7 +188,7 @@
             <svelte:self
               hastNodes={node.children}
               depth={depth + 1}
-              selectedNodeIndexTraces={nextSelectedNodeIndexTracesMap[nodeIndex]}
+              selectedNodeIndexTraces2={nextSelectedNodeIndexTracesMap2[nodeIndex]}
               on:select={({ detail: indexes }) => {
                 triggerSelect([nodeIndex].concat(indexes));
               }}
@@ -159,6 +196,7 @@
                 triggerSelectMore([nodeIndex].concat(indexes));
               }}
             />
+            <!-- selectedNodeIndexTraces={nextSelectedNodeIndexTracesMap[nodeIndex]} -->
           </div>
         {/if}
       </li>

@@ -174,7 +174,7 @@ export function buildMarkdownStyleRemover(
   if (end?.offset === undefined) return;
 
   // remove outer/inner wrapper element
-  const wrapperType = isStyleWrapperElement(hastNode);
+  const wrapperType = checkStyleWrapperElement(hastNode);
 
   // remove outer wrapping element
   if (wrapperType === 'outer') {
@@ -221,7 +221,9 @@ function getChildMarkdown(
   return childrenMarkdown;
 }
 
-function isStyleWrapperElement(node: HastElement): false | WrapperType {
+export function checkStyleWrapperElement(node: HastContent): false | WrapperType {
+  if (node.type !== 'element') return false;
+
   const { tagName } = node;
   const className: string[] = (node.properties?.className ?? []) as string[];
   if (!(tagName === 'div' && className?.includes('wrapper'))) {

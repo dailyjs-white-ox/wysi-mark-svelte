@@ -5,9 +5,12 @@
   import NestedHastElementList from '$lib/components/NestedHastElementList.svelte';
   import {
     selectedNode1Index,
-    selectedNodeIndexTracesMap,
-    type SelectedType,
+    //selectedNodeIndexTracesMap,
+    selectedNodeIndexTracesWithSourceMap,
+    type NodeIndexTrace,
+    type SelectedSourceDetail,
   } from '$lib/selected_stores';
+  import type { SelectedType } from '$lib/selected_stores';
   import StylesProperty from './StylesProperty.svelte';
 
   const dispatchEvent = createEventDispatcher<{
@@ -20,7 +23,11 @@
   let slideHastNodeGroup: SlideHastNode[];
   $: slideHastNodeGroup = $slideHasts[slideIndex];
 
-  $: currentSlideSelectedIndexTraces = $selectedNodeIndexTracesMap[slideIndex] ?? [];
+  //$: currentSlideSelectedIndexTraces = $selectedNodeIndexTracesMap[slideIndex] ?? [];
+  let currentSlideSelectedIndexTraces2: [NodeIndexTrace, SelectedSourceDetail][];
+  $: {
+    currentSlideSelectedIndexTraces2 = $selectedNodeIndexTracesWithSourceMap[slideIndex] ?? [];
+  }
 
   function triggerSelect(slideIndex: string | number, indexTrace?: number[]) {
     dispatchEvent('select', [
@@ -75,25 +82,26 @@
   {#if slideHastNodeGroup}
     <NestedHastElementList
       hastNodes={slideHastNodeGroup}
-      selectedNodeIndexTraces={currentSlideSelectedIndexTraces}
+      selectedNodeIndexTraces2={currentSlideSelectedIndexTraces2}
       on:select={({ detail: indexTrace }) => triggerSelect(slideIndex, indexTrace)}
       on:select:more={({ detail: indexTrace }) => triggerSelectMore(slideIndex, indexTrace)}
     />
+    <!-- selectedNodeIndexTraces={currentSlideSelectedIndexTraces} -->
   {/if}
 
-  {#if currentSlideSelectedIndexTraces.length > 0}
+  {#if currentSlideSelectedIndexTraces2.length > 0}
     <h3>Styles</h3>
-    {#if currentSlideSelectedIndexTraces.length === 1}
-      {@const nodeIndexTrace = currentSlideSelectedIndexTraces[0]}
+    {#if currentSlideSelectedIndexTraces2.length === 1}
+      {@const nodeTrace = currentSlideSelectedIndexTraces2[0][0]}
       {@const selectedNode = findHastNodeByIndexTrace(
-        slideHastNodeGroup[nodeIndexTrace?.[0]],
-        nodeIndexTrace?.slice(1)
+        slideHastNodeGroup[nodeTrace?.[0]],
+        nodeTrace?.slice(1)
       )}
       {#if selectedNode && selectedNode.type === 'element'}
         <StylesProperty node={selectedNode} />
       {/if}
     {:else}
-      <p>You have selected {currentSlideSelectedIndexTraces.length} nodes</p>
+      <p>You have selected {currentSlideSelectedIndexTraces2.length} nodes</p>
     {/if}
   {/if}
 </aside>

@@ -24,9 +24,6 @@
       const result = buildMarkdownStyleRemover(node, $markdown);
       if (result) {
         const [pos, mdSource] = result;
-        console.log('🚀 ~ file: StylesProperty.svelte:25 ~ submit ~ result:', result, {
-          source: $markdown.slice(pos.start, pos.end),
-        });
         // TODO: FIX editor scroll after update
         markdown.updateAt(pos, mdSource);
       }
