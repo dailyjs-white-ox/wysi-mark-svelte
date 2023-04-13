@@ -26,6 +26,19 @@ describe('hastInsertStyle', () => {
     expect(mdSource).toEqual('<p style="color: blue;">abc</p>');
   });
 
+  it('should not render data-node-index-trace attribute', () => {
+    const htmlSource = `<p data-node-index-trace="3">abc</p>`;
+    const hastNode = fromHtml(htmlSource);
+
+    const targetNode = select('p', hastNode);
+    const result = hastInsertStyle(targetNode as HastElement, 'color: blue;', htmlSource);
+    expect(result).not.toBeUndefined();
+    if (result === undefined) return;
+
+    const [_pos, mdSource] = result;
+    expect(mdSource).toEqual('<p style="color: blue;">abc</p>');
+  });
+
   describe('inline', () => {
     it('wrap li tag inner with html', () => {
       const markdownSource = [

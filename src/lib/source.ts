@@ -42,16 +42,22 @@ export function hastText(value: string): HastText {
 
 /**
  * Convert hast element to markdown, but render the outer tag as HTML.
+ *
+ *
  */
 export function hastToMarkdownWithHtmlHead(
   node: HastElement,
   properties: {},
   childrenMarkdown: string
 ): string {
-  // hast node with children rendered as markdown
+  // ignore prop starting with data
+  const nodeProperties = Object.fromEntries(
+    Object.entries(node.properties ?? {}).filter(([key, value]) => !key.startsWith('data'))
+  );
+
   const newHastNode: HastElement = {
     ...node,
-    properties: { ...node.properties, ...properties },
+    properties: { ...nodeProperties, ...properties },
     children: [hastText(childrenMarkdown)],
   };
 
@@ -74,6 +80,7 @@ export function hastInsertStyle(
   const innerWrapTags: { [key: string]: 'inline' | 'block' } = {
     li: 'inline',
     ul: 'block',
+    pre: 'block',
   };
   const { tagName, children } = hastNode;
   const wrapType = innerWrapTags[tagName];
@@ -112,32 +119,29 @@ export function hastInsertStyle(
         innerMarkdownLines[0],
         ...prependLeadToLines(innerMarkdownLines.slice(1), leadLength),
       ].join('\n');
-    } else {
+    }
+    // 'inline'
+    else {
       const childrenMarkdown = markdownSource.slice(start.offset, end.offset);
       innerMarkdown = hastToMarkdownWithHtmlHead(wrappedNode, { style }, childrenMarkdown);
     }
-
     // console.log('🚀 innerMarkdown:', JSON.stringify(innerMarkdown), { wrappedNode, hastNode });
     return [{ start: start.offset, end: end.offset }, innerMarkdown];
   }
-  // update source for hast node
-  else {
-    const { position } = hastNode;
-    const start = position.start.offset;
-    const end = position.end.offset;
-    if (start === undefined || end === undefined) return;
 
-    // keep children in markdown as text
-    const childrenMarkdown = [
-      '',
-      ...hastNode.children.map((childNode) => hastToMarkdown(childNode)),
-      '',
-    ]
-      .join('\n')
-      .trim();
-    const mdSource = hastToMarkdownWithHtmlHead(hastNode, { style }, childrenMarkdown);
-    return [{ start, end }, mdSource];
-  }
+  // other hast nodes
+  const { start, end } = hastNode.position;
+  if (start.offset === undefined || end.offset === undefined) return;
+
+  // keep children in markdown as text
+  // const childrenMarkdown = markdownSource.slice(start.offset, end.offset);
+  const childrenMarkdown = hastNode.children
+    .map((childNode) => hastToMarkdown(childNode))
+    .join('\n')
+    .trim();
+  // console.log( '🚀 ~ file: source.ts:134 ~ childrenMarkdown:', childrenMarkdown, JSON.stringify(hastNode, null, 2));
+  const mdSource = hastToMarkdownWithHtmlHead(hastNode, { style }, childrenMarkdown);
+  return [{ start: start.offset, end: end.offset }, mdSource];
 }
 
 type LeadingWhitespaceOptions = {
