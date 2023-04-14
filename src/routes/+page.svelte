@@ -29,6 +29,12 @@
   $: tocWidth = showToc ? prevPropertiesWidth : 0;
 
   let editorWidthRatio = 0.5;
+  $: previewWidthRatio = 1.0 - editorWidthRatio;
+  // prev
+  let prevEditorWidthRatio = editorWidthRatio;
+  // update
+  $: editorWidthRatio = showPreview ? prevEditorWidthRatio : 1.0;
+  $: console.log('🚀 previewWidthRatio:', previewWidthRatio, { editorWidthRatio });
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -91,6 +97,17 @@
     }
   }
 
+  function togglePreview() {
+    if (!showPreview) {
+      showPreview = true;
+      editorWidthRatio = prevEditorWidthRatio;
+    } else {
+      showPreview = false;
+      prevEditorWidthRatio = editorWidthRatio;
+      editorWidthRatio = 1.0;
+    }
+  }
+
   let didMount = false;
   onMount(() => {
     const restoredValue = restoreSessionStorageSnapshot();
@@ -111,9 +128,9 @@
     class:hide-preview={!showPreview}
     style:--toc-width={`${tocWidth}px`}
     style:--properties-width={`${propertiesWidth}px`}
+    style:--editor-width={`minmax(0, ${editorWidthRatio * 100}fr)`}
+    style:--preview-width={`minmax(0, ${previewWidthRatio * 100}fr)`}
   >
-    <!-- style:--editor-width={`minmax(0, ${Math.floor(editorWidthRatio * 100)}fr)`}
-    style:--preview-width={`minmax(0, ${100 - Math.floor(editorWidthRatio * 100)}fr)`} -->
     <nav class="navigator">
       <div>
         <button on:click={() => (showPresentation = true)}>Show Presentation</button>
@@ -121,14 +138,7 @@
         <button on:click={() => (showEditor = !showEditor)}>Editor</button>
       </div>
       <div>
-        <button
-          on:click={() => {
-            showPreview = !showPreview;
-            if (!showPreview) {
-              editorWidthRatio = 1.0;
-            }
-          }}>Preview</button
-        >
+        <button on:click={togglePreview}>Preview</button>
         <button on:click={toggleShowProperties}>Properties</button>
       </div>
     </nav>
@@ -144,7 +154,7 @@
       <CodeMirror5Editor bind:value={$markdown} />
     </section>
 
-    <section class="preview" aria-label="preview" style:border-left="1px solid #676778">
+    <section class="preview" aria-label="preview">
       {#if showPreview}
         <Preview on:select={handleSelect} on:select:more={handleSelectMore} />
       {/if}
@@ -169,12 +179,18 @@
         <Splitter
           class="preview-splitter"
           borderColor="#676778"
-          visible={false}
-          left={`calc((100% - ${tocWidth}px - ${propertiesWidth}px) * ${editorWidthRatio})`}
+          visible={!false}
+          left={`calc((100% - ${tocWidth}px - ${propertiesWidth}px) * ${editorWidthRatio} + ${tocWidth}px)`}
           on:drag:end={({ detail }) => {
-            console.log('🚀 ~ file: +page.svelte:156 ~ detail:', detail.offsetX, { detail, rect });
-            // editorWidthRatio = detail.offsetX - tocWidth;
-            editorWidthRatio = detail.offsetX / (rect.width - tocWidth - propertiesWidth);
+            const { offsetX } = detail;
+            editorWidthRatio = (offsetX - tocWidth) / (rect.width - tocWidth - propertiesWidth);
+            console.log(
+              '🚀 ~ file: drag:end ~ detail:',
+              offsetX,
+              { detail, rect },
+              '=>',
+              editorWidthRatio
+            );
           }}
         />
       {/if}

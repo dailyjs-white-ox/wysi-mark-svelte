@@ -33,12 +33,16 @@
   let phantom = false;
   let phantomEl: HTMLElement;
   $: if (typeof left === 'string') {
-    // console.log('🚀 left:', left);
+    updateLeftPx(left);
+  } else {
+    leftPx = left;
+  }
+
+  async function updateLeftPx(left: string) {
+    console.log('🚀 left:', left);
     getPhantomLeft(left).then((value) => {
       leftPx = value;
     });
-  } else {
-    leftPx = left;
   }
 
   async function getPhantomLeft(left: string) {
@@ -48,7 +52,7 @@
     const phantomRect = phantomEl?.getBoundingClientRect();
     if (!phantomRect) return;
     console.log('phantom left:', phantomRect.left, { left, phantomEl, phantomRect });
-    phantom = false;
+    // phantom = false;
 
     return phantomRect.left;
   }
@@ -56,6 +60,10 @@
   let widthPx: number | undefined = undefined;
   $: width = unlessUndefined(widthPx, (value) => `${value}px`);
   export { widthPx as width };
+
+  function handleDragEnd(event: CustomEvent<DragEventData>) {
+    dispatchEvent('drag:end', event.detail);
+  }
 
   function unlessUndefined<T, S>(value: T | undefined, getter: (value: T) => S): S | undefined {
     if (typeof value === 'undefined') {
@@ -78,7 +86,7 @@
       disabled,
     }}
     on:neodrag:start={(e) => dispatchEvent('drag:start', e.detail)}
-    on:neodrag:end={(e) => dispatchEvent('drag:end', e.detail)}
+    on:neodrag:end={handleDragEnd}
     on:neodrag={(e) => dispatchEvent('drag', e.detail)}
   >
     <div class="inner-line" />
