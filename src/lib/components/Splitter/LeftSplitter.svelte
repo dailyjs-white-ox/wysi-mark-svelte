@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, tick } from 'svelte';
   import { draggable } from '@neodrag/svelte';
+  import { getContext } from 'svelte';
+  import type { Readable } from 'svelte/store';
 
   type DragEventData = {
     /** How much element moved from its original position horizontally */
@@ -43,6 +45,14 @@
     leftPx = left;
   }
 
+  const rect = getContext<Readable<DOMRect>>('splitter');
+  rect.subscribe(($rect) => {
+    if (!$rect) return;
+    if (typeof left === 'string') {
+      updateLeftPx(left);
+    }
+  });
+
   async function updateLeftPx(left: string) {
     console.log('🚀 left:', left);
     getPhantomLeft(left).then((value) => {
@@ -52,8 +62,8 @@
 
   async function getPhantomLeft(left: string) {
     phantom = true;
-
     await tick();
+
     const phantomRect = phantomEl?.getBoundingClientRect();
     if (!phantomRect) return;
     console.log('phantom left:', phantomRect.left, { left, phantomEl, phantomRect });
