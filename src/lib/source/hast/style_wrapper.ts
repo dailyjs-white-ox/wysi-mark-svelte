@@ -182,7 +182,10 @@ export function buildMarkdownStyleRemover(
     // const { start, end } = onlyChild.position ?? {};
 
     //
-    const childrenMarkdown = getChildMarkdown(hastNode as HastElementWithOffset, markdownSource);
+    const childrenMarkdown = getChildMarkdownByLine(
+      hastNode as HastElementWithOffset,
+      markdownSource
+    );
     if (!childrenMarkdown) return;
 
     return [{ start: start.offset, end: end.offset }, childrenMarkdown];
@@ -190,10 +193,14 @@ export function buildMarkdownStyleRemover(
   // remove inner wrapping element
   else if (wrapperType === 'inner') {
     const onlyChild = hastNode.children[0] as HastElementWithOffset;
-    const { start, end } = onlyChild.position ?? {};
+    // const { start, end } = onlyChild.position ?? {};
 
     //
-    const childrenMarkdown = getChildMarkdown(hastNode, markdownSource);
+    const childrenMarkdown = getChildMarkdownByOffset(
+      hastNode as HastElementWithOffset,
+      markdownSource
+    );
+    // console.log( '🚀 ~ file: style_wrapper.ts:197 ~ childrenMarkdown:', JSON.stringify(childrenMarkdown), { markdownSource, onlyChild, hastNode, });
     if (!childrenMarkdown) return;
 
     return [{ start: start.offset, end: end.offset }, childrenMarkdown];
@@ -204,7 +211,17 @@ export function buildMarkdownStyleRemover(
   }
 }
 
-function getChildMarkdown(
+function getChildMarkdownByOffset(
+  hastNode: HastElementWithOffset,
+  markdownSource: string
+): string | undefined {
+  const onlyChild = hastNode.children[0] as HastElementWithOffset;
+  const { start, end } = onlyChild.position ?? {};
+
+  return markdownSource.slice(start.offset, end.offset);
+}
+
+function getChildMarkdownByLine(
   hastNode: HastElementWithOffset,
   markdownSource: string
 ): string | undefined {
@@ -212,6 +229,7 @@ function getChildMarkdown(
   const { start, end } = onlyChild.position ?? {};
 
   let slicedSourceLines = markdownSource.split('\n').slice(start.line - 1, end.line);
+
   // dedent. (outerIndent < innerIndent)
   const outerIndent = hastNode.position.start.column;
   const innerIndent = start.column;

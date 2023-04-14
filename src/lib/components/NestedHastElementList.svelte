@@ -1,8 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { toText } from 'hast-util-to-text';
-
-  import type { HastElement, HastText } from 'mdast-util-to-hast/lib/state';
+  import type { HastText } from 'mdast-util-to-hast/lib/state';
 
   import { markdown, type SlideHastNode } from '$lib/source_stores';
   import { firstLine } from '$lib/source_helpers';
@@ -215,6 +214,8 @@
   }
 
   .summary-content textarea {
+    height: calc(1em * 1.14 + 4px);
+    padding: 2px;
     resize: vertical;
   }
   .summary-content code {

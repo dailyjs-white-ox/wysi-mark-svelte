@@ -14,18 +14,20 @@
 
   function submit() {
     if (styleText) {
-      const result = buildMarkdownStyleWrapper(node, styleText, $markdown);
-      if (result) {
-        const [pos, mdSource] = result;
+      const wrapper = buildMarkdownStyleWrapper(node, styleText, $markdown);
+      if (wrapper) {
+        const [pos, mdSource] = wrapper;
         // TODO: FIX editor scroll after update
         markdown.updateAt(pos, mdSource);
       }
     } else {
-      const result = buildMarkdownStyleRemover(node, $markdown);
-      if (result) {
-        const [pos, mdSource] = result;
+      const remover = buildMarkdownStyleRemover(node, $markdown);
+      if (remover) {
+        const [pos, mdSource] = remover;
         // TODO: FIX editor scroll after update
         markdown.updateAt(pos, mdSource);
+
+        // TODO: selected nodes should be re-aligned
       }
     }
   }

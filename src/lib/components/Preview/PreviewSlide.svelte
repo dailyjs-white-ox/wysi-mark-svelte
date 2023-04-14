@@ -4,6 +4,7 @@
 
   import { buildSlideIndexClassName } from './utils';
   import type { HastContent } from 'mdast-util-to-hast/lib';
+  import type { WithTarget } from '$lib/utils/types';
 
   const dispatchEvent = createEventDispatcher<{
     select: number[];
@@ -21,27 +22,29 @@
 
   // toggle class for selected nodes
   // FIXME: using vanilla DOM javascript here. Make it more svelty.
-  $: if (slideHtml && isSelected && selectedNodeTraces && ref) {
-    tick().then(() => {
-      ref.querySelectorAll('.selected-node').forEach((el) => {
-        el.classList.remove('selected-node');
-      });
-      const selectedEls =
-        selectedNodeTraces
-          .map((nodeTrace) => {
-            const descendant = findDomNodeByIndexTrace(ref, nodeTrace);
-            if (!descendant) return;
-            if (!isElement(descendant)) {
-              console.error('uh-oh, this is not an element', descendant, { nodeTrace });
-              return;
-            }
-            return descendant;
-          })
-          .filter<Element>(Boolean) ?? [];
-      selectedEls.forEach((el) => {
-        el.classList.add('selected-node');
-      });
+  $: if (slideHtml && selectedNodeTraces && ref) {
+    ref.querySelectorAll('.selected-node').forEach((el) => {
+      el.classList.remove('selected-node');
     });
+    if (isSelected) {
+      tick().then(() => {
+        const selectedEls =
+          selectedNodeTraces
+            .map((nodeTrace) => {
+              const descendant = findDomNodeByIndexTrace(ref, nodeTrace);
+              if (!descendant) return;
+              if (descendant.nodeType !== document.ELEMENT_NODE) {
+                console.error('uh-oh, this is not an element', descendant, { nodeTrace });
+                return;
+              }
+              return descendant;
+            })
+            .filter<Element>(Boolean) ?? [];
+        selectedEls.forEach((el) => {
+          el.classList.add('selected-node');
+        });
+      });
+    }
   }
 
   function findDomNodeByIndexTrace(element: Node, indexTrace: number[]): Node | undefined {
@@ -54,8 +57,29 @@
     return findDomNodeByIndexTrace(childNode, remaining);
   }
 
-  function isElement(node: Node): node is Element {
-    return node.nodeType === document.ELEMENT_NODE;
+  function handleClick(ev: WithTarget<MouseEvent, HTMLElement>) {
+    if (!ev.target) return;
+    const target = ev.target as HTMLElement;
+
+    const nodeIndexTrace = target.dataset['nodeIndexTrace']?.split('.').map(Number);
+    if (!nodeIndexTrace) return;
+
+    // specific
+    if (target.tagName === 'CODE' && target.parentElement?.tagName === 'PRE') {
+      nodeIndexTrace.pop();
+    }
+    if (target.tagName === 'DIV') {
+      // li > .inner-wrapper
+      if (target.classList.contains('li-inner-wrapper') && target.parentElement?.tagName === 'LI') {
+        // nodeIndexTrace.pop();
+      }
+    }
+
+    if (ev.metaKey) {
+      dispatchEvent('select:more', nodeIndexTrace);
+    } else {
+      dispatchEvent('select', nodeIndexTrace);
+    }
   }
 </script>
 
@@ -66,16 +90,7 @@
   class:selected-slide={isSelected}
   tabindex="-1"
   on:keydown
-  on:click={(ev) => {
-    const nodeIndexTrace = ev.target?.dataset['nodeIndexTrace']?.split('.').map(Number);
-    if (!nodeIndexTrace) return;
-
-    if (ev.metaKey) {
-      dispatchEvent('select:more', nodeIndexTrace);
-    } else {
-      dispatchEvent('select', nodeIndexTrace);
-    }
-  }}
+  on:click|preventDefault={handleClick}
 >
   {@html slideHtml}
 </article>
@@ -89,6 +104,7 @@
       min-width: calc(100% - 40px);
       background-color: white;
       aspect-ratio: 4 / 3;
+      user-select: text;
     }
     article.selected-slide {
       outline: 2px solid #666;

@@ -5,12 +5,7 @@
   import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
   import { buildSlideIndexClassName } from './utils';
-  import {
-    selected1,
-    selectedNodeIndexTracesMap,
-    selecteds,
-    type SelectedType,
-  } from '$lib/selected_stores';
+  import { selected1, selectedNodeIndexTracesMap, type SelectedType } from '$lib/selected_stores';
 
   const dispatchEvent = createEventDispatcher<{
     select: SelectedType;
@@ -20,6 +15,7 @@
   let slideIndex: number = 0;
   let selectedNodeIndexTrace: number[] | undefined;
   $: slideIndex = $selected1?.[0] ?? 0;
+  $: console.log('🚀 slideIndex:', slideIndex);
   $: selectedNodeIndexTrace = $selected1?.[1];
 
   let ref: HTMLElement;
@@ -103,10 +99,11 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
   }
   .slides-container {
+    height: 100%;
+
     display: flex;
     flex-direction: row;
     align-items: flex-start;
