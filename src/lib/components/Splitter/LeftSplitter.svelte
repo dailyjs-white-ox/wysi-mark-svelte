@@ -21,14 +21,19 @@
 
   let className = '';
   export { className as class };
-  export let borderColor: string | undefined = undefined;
 
   export let disabled = false;
   export let visible = true;
 
   export let left: number | string | undefined = undefined;
-
   let leftPx: number | undefined = undefined;
+
+  let widthPx: number | undefined = undefined;
+  $: width = unlessUndefined(widthPx, (value) => `${value}px`);
+  export { widthPx as width };
+
+  export let borderColor: string | undefined = undefined;
+  export let backgroundColor: string | undefined = undefined;
 
   let phantom = false;
   let phantomEl: HTMLElement;
@@ -52,17 +57,16 @@
     const phantomRect = phantomEl?.getBoundingClientRect();
     if (!phantomRect) return;
     console.log('phantom left:', phantomRect.left, { left, phantomEl, phantomRect });
-    // phantom = false;
+    phantom = false;
 
     return phantomRect.left;
   }
 
-  let widthPx: number | undefined = undefined;
-  $: width = unlessUndefined(widthPx, (value) => `${value}px`);
-  export { widthPx as width };
-
-  function handleDragEnd(event: CustomEvent<DragEventData>) {
-    dispatchEvent('drag:end', event.detail);
+  function mapStyles(styleTuples: [string, string | undefined][]): string {
+    return styleTuples
+      .filter(([_key, value]) => value)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(';');
   }
 
   function unlessUndefined<T, S>(value: T | undefined, getter: (value: T) => S): S | undefined {
@@ -78,15 +82,18 @@
     class:splitter={true}
     class:disabled
     class={className}
-    style:--border-color={borderColor}
-    style={width === undefined ? '' : `--line-width={width}`}
+    style={mapStyles([
+      ['--line-width', width],
+      ['--border-color', borderColor],
+      ['--background-color', backgroundColor],
+    ])}
     use:draggable={{
       axis: 'x',
       position: { x: leftPx ?? 0, y: 0 },
       disabled,
     }}
     on:neodrag:start={(e) => dispatchEvent('drag:start', e.detail)}
-    on:neodrag:end={handleDragEnd}
+    on:neodrag:end={(e) => dispatchEvent('drag:end', e.detail)}
     on:neodrag={(e) => dispatchEvent('drag', e.detail)}
   >
     <div class="inner-line" />
