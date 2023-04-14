@@ -35,6 +35,7 @@
   .app {
     --header-height: 60px;
     --footer-height: 60px;
+    overflow: hidden;
   }
 
   .app {

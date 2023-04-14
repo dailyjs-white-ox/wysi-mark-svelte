@@ -204,6 +204,7 @@
   main {
     height: 100%;
     overflow: hidden;
+    user-select: none;
   }
   main > section {
     max-height: 100%;
@@ -220,8 +221,7 @@
       var(--properties-width, 0);
     grid-template-areas:
       'nav nav nav nav'
-      'toc editor preview properties'
-      'footer footer footer footer';
+      'toc editor preview properties';
   }
   .navigator {
     /* grid-area: 1 / 1 / 2 / -1; */
