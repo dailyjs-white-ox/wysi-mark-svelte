@@ -33,7 +33,7 @@
   let phantom = false;
   let phantomEl: HTMLElement;
   $: if (typeof left === 'string') {
-    console.log('🚀 left:', left);
+    // console.log('🚀 left:', left);
     getPhantomLeft(left).then((value) => {
       leftPx = value;
     });

@@ -1,15 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
+  import { scrollIntoView } from 'seamless-scroll-polyfill';
 
   import { slides, slideHasts } from '$lib/source_stores';
   import PreviewSlide from './PreviewSlide.svelte';
   import { buildSlideIndexClassName } from './utils';
-  import {
-    selected1,
-    selectedNodeIndexTracesMap,
-    selecteds,
-    type SelectedType,
-  } from '$lib/selected_stores';
+  import { selected1, selectedNodeIndexTracesMap, type SelectedType } from '$lib/selected_stores';
 
   const dispatchEvent = createEventDispatcher<{
     select: SelectedType;
@@ -19,6 +15,7 @@
   let slideIndex: number = 0;
   let selectedNodeIndexTrace: number[] | undefined;
   $: slideIndex = $selected1?.[0] ?? 0;
+  $: console.log('🚀 slideIndex:', slideIndex);
   $: selectedNodeIndexTrace = $selected1?.[1];
 
   let ref: HTMLElement;
@@ -48,7 +45,9 @@
   $: ((slideIndex) => {
     const selectedSlide = ref?.querySelector(`.${buildSlideIndexClassName(slideIndex)}`);
     if (selectedSlide) {
-      selectedSlide.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      console.log('scroll:', slideIndex, selectedSlide);
+      // selectedSlide.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      scrollIntoView(selectedSlide, { behavior: 'smooth', inline: 'center' });
     }
   })(slideIndex);
 </script>
@@ -100,10 +99,11 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
   }
   .slides-container {
+    height: 100%;
+
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -111,8 +111,10 @@
 
     padding: 20px;
     background-color: #ccc;
-    overflow-x: auto;
     overflow-y: hidden;
+    overflow-x: scroll;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
   }
 
   input[type='number'][name='slide-index'] {

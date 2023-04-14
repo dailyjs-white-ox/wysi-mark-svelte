@@ -1,11 +1,42 @@
 import type { Snapshot } from '@sveltejs/kit';
 
-export default function useSessionStorageSnapshot<T>(
+export default useSessionStorageSnapshot;
+
+type ReturnType = {
+  captureSessionStorageSnapshot: Function;
+  restoreSessionStorageSnapshot: Function;
+  resetSessionStorageSnapshot: Function;
+};
+
+function useSessionStorageSnapshot<T>(
+  key: string,
+  snapshotToSessionStorage: Snapshot<T>
+): ReturnType;
+function useSessionStorageSnapshot<T>(
   snapshotToSessionStorage: Snapshot<T> & {
     key: string;
   }
-) {
-  const { key, capture, restore } = snapshotToSessionStorage;
+): ReturnType;
+function useSessionStorageSnapshot<T>(
+  arg1:
+    | string
+    | (Snapshot<T> & {
+        key: string;
+      }),
+  arg2?: Snapshot<T>
+): ReturnType {
+  let key: string;
+  let snapshot: Snapshot<T>;
+  if (typeof arg1 === 'string') {
+    key = arg1;
+    snapshot = arg2 as Snapshot<T>;
+  } else {
+    const { key: _key, ...rest } = arg2 as Snapshot<T> & { key: string };
+    key = _key;
+    snapshot = rest;
+  }
+
+  const { capture, restore } = snapshot;
 
   function captureSessionStorageSnapshot() {
     if (typeof sessionStorage == 'undefined') return;

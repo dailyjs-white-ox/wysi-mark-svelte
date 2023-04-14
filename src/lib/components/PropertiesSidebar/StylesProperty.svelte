@@ -1,16 +1,34 @@
 <script lang="ts">
-  import { hastInsertStyle } from '$lib/source';
+  import {
+    buildMarkdownStyleRemover,
+    buildMarkdownStyleWrapper,
+  } from '$lib/source/hast/style_wrapper';
   import { markdown } from '$lib/source_stores';
   import type { HastElement } from 'mdast-util-to-hast/lib/state';
 
   export let node: HastElement;
+  let nodeClassName: string[];
+  $: nodeClassName = (node.properties?.className as string[]) ?? [];
+
   $: styleText = (node.properties?.style ?? '') as string;
 
   function submit() {
-    const result = hastInsertStyle(node, styleText, $markdown);
-    if (result) {
-      const [pos, mdSource] = result;
-      markdown.updateAt(pos, mdSource);
+    if (styleText) {
+      const wrapper = buildMarkdownStyleWrapper(node, styleText, $markdown);
+      if (wrapper) {
+        const [pos, mdSource] = wrapper;
+        // TODO: FIX editor scroll after update
+        markdown.updateAt(pos, mdSource);
+      }
+    } else {
+      const remover = buildMarkdownStyleRemover(node, $markdown);
+      if (remover) {
+        const [pos, mdSource] = remover;
+        // TODO: FIX editor scroll after update
+        markdown.updateAt(pos, mdSource);
+
+        // TODO: selected nodes should be re-aligned
+      }
     }
   }
 </script>
@@ -19,6 +37,11 @@
   <div>
     tag: <code>{node.tagName}</code>
   </div>
+  {#if nodeClassName.length > 0}
+    <div>
+      class: <code>{nodeClassName.join(' ')}</code>
+    </div>
+  {/if}
 
   <label
     >Style:
@@ -29,8 +52,9 @@
         node.properties.style = ev.currentTarget.value;
       }}
       on:keydown={(ev) => {
+        // submit the form
         if (ev.metaKey && ev.key === 'Enter') {
-          submit();
+          ev.currentTarget.form?.requestSubmit();
         }
       }}
     />

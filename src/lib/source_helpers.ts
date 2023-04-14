@@ -2,6 +2,15 @@ import { toText } from 'hast-util-to-text';
 import { createHtmlElement } from '$lib/utils/html';
 import type { HastContent } from './source_stores';
 
+export function firstLine(text: string | null): string {
+  if (!text) return '';
+  const lines = text.trim().split('\n');
+  if (lines.length === 0) {
+    return text;
+  }
+  return lines[0] + `... (${lines.length} lines)`;
+}
+
 export function contentTitleFromHtml(htmlSource: string): string {
   const { body } = createHtmlElement(htmlSource);
   if (!body) return '';

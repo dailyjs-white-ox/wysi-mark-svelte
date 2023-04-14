@@ -14,8 +14,6 @@
   // make sure left is re-calculated on rect change (such as resize)
   rect.subscribe(($rect) => {
     if (!$rect) return;
-
-    const prevLeft = left;
     left = right === undefined ? undefined : $rect.width - right;
   });
 </script>
