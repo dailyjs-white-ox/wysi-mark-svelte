@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
 
   import { markdown } from '$lib/source_stores';
-  import { selecteds, type SelectedType } from '$lib/selected_stores';
+  import { selecteds, selectedNode1Index, type SelectedType } from '$lib/selected_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
   import Presentation from './Presentation.svelte';
@@ -25,8 +25,8 @@
   let propertiesWidth = 200;
   let prevTocWidth = tocWidth;
   let prevPropertiesWidth = propertiesWidth;
-  $: propertiesWidth = showProperties ? 200 : 0;
-  $: tocWidth = showToc ? 200 : 0;
+  $: propertiesWidth = showProperties ? prevTocWidth : 0;
+  $: tocWidth = showToc ? prevPropertiesWidth : 0;
 
   let editorWidthRatio = 0.5;
 
@@ -37,6 +37,7 @@
       showEditor,
       showProperties,
       showPreview,
+      selectedSlideIndex: $selectedNode1Index,
     }),
     restore: (state) => {
       $markdown = state.markdown ?? '';
@@ -44,6 +45,18 @@
       showEditor = state.showEditor;
       showProperties = state.showProperties;
       showPreview = state.showPreview;
+      if (state.selectedSlideIndex !== undefined) {
+        $selecteds = [
+          [
+            state.selectedSlideIndex,
+            undefined,
+            {
+              source: 'Preview',
+              timestamp: Date.now(),
+            },
+          ],
+        ];
+      }
     },
   };
   const { captureSessionStorageSnapshot, restoreSessionStorageSnapshot } =
@@ -58,7 +71,6 @@
   }
 
   function toggleShowToc() {
-    // showToc = !showToc;
     if (showToc) {
       showToc = false;
       prevTocWidth = tocWidth;
@@ -85,10 +97,10 @@
     didMount = true;
   });
   // run this after mount
-  $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties) => {
+  $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties, _$selecteds) => {
     if (!didMount) return;
     captureSessionStorageSnapshot();
-  })($markdown, showToc, showEditor, showPreview, showProperties);
+  })($markdown, showToc, showEditor, showPreview, showProperties, $selecteds);
 </script>
 
 {#if showPresentation}
@@ -100,6 +112,8 @@
     style:--toc-width={`${tocWidth}px`}
     style:--properties-width={`${propertiesWidth}px`}
   >
+    <!-- style:--editor-width={`minmax(0, ${Math.floor(editorWidthRatio * 100)}fr)`}
+    style:--preview-width={`minmax(0, ${100 - Math.floor(editorWidthRatio * 100)}fr)`} -->
     <nav class="navigator">
       <div>
         <button on:click={() => (showPresentation = true)}>Show Presentation</button>
@@ -107,7 +121,14 @@
         <button on:click={() => (showEditor = !showEditor)}>Editor</button>
       </div>
       <div>
-        <button on:click={() => (showPreview = !showPreview)}>Preview</button>
+        <button
+          on:click={() => {
+            showPreview = !showPreview;
+            if (!showPreview) {
+              editorWidthRatio = 1.0;
+            }
+          }}>Preview</button
+        >
         <button on:click={toggleShowProperties}>Properties</button>
       </div>
     </nav>
