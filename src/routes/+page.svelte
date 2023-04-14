@@ -25,16 +25,13 @@
   let propertiesWidth = 200;
   let prevTocWidth = tocWidth;
   let prevPropertiesWidth = propertiesWidth;
-  $: propertiesWidth = showProperties ? prevTocWidth : 0;
-  $: tocWidth = showToc ? prevPropertiesWidth : 0;
+  //$: propertiesWidth = showProperties ? prevTocWidth : 0;
+  //$: tocWidth = showToc ? prevTocWidth : 0;
 
   let editorWidthRatio = 0.5;
-  $: previewWidthRatio = 1.0 - editorWidthRatio;
-  // prev
   let prevEditorWidthRatio = editorWidthRatio;
-  // update
-  $: editorWidthRatio = showPreview ? prevEditorWidthRatio : 1.0;
-  $: console.log('🚀 previewWidthRatio:', previewWidthRatio, { editorWidthRatio });
+  let _previewWidthRatio: number; // soley depends on editorWidthRatio
+  $: _previewWidthRatio = 1.0 - editorWidthRatio;
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -97,11 +94,27 @@
     }
   }
 
-  function togglePreview() {
+  function toggleShowEditor() {
+    console.log('🚀 ~ toggleShowEditor ~ showEditor:', showEditor);
+    if (showEditor) {
+      showEditor = false;
+      prevEditorWidthRatio = editorWidthRatio;
+      editorWidthRatio = 0.0;
+    } else {
+      showEditor = true;
+      editorWidthRatio = prevEditorWidthRatio;
+    }
+    console.log('🚀 ~ editorWidthRatio:', editorWidthRatio, { prevEditorWidthRatio });
+  }
+
+  function toggleShowPreview() {
+    // turn showPreview on
     if (!showPreview) {
       showPreview = true;
       editorWidthRatio = prevEditorWidthRatio;
-    } else {
+    }
+    // turn off
+    else {
       showPreview = false;
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 1.0;
@@ -129,16 +142,16 @@
     style:--toc-width={`${tocWidth}px`}
     style:--properties-width={`${propertiesWidth}px`}
     style:--editor-width={`minmax(0, ${editorWidthRatio * 100}fr)`}
-    style:--preview-width={`minmax(0, ${previewWidthRatio * 100}fr)`}
+    style:--preview-width={`minmax(0, ${_previewWidthRatio * 100}fr)`}
   >
     <nav class="navigator">
       <div>
         <button on:click={() => (showPresentation = true)}>Show Presentation</button>
         <button on:click={toggleShowToc}>ToC</button>
-        <button on:click={() => (showEditor = !showEditor)}>Editor</button>
+        <button on:click={toggleShowEditor}>Editor</button>
       </div>
       <div>
-        <button on:click={togglePreview}>Preview</button>
+        <button on:click={toggleShowPreview}>Preview</button>
         <button on:click={toggleShowProperties}>Properties</button>
       </div>
     </nav>
