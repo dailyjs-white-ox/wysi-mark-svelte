@@ -12,6 +12,7 @@
   } from '$lib/selected_stores';
   import type { SelectedType } from '$lib/selected_stores';
   import StylesProperty from './StylesProperty.svelte';
+  import { findHastNodeByIndexTrace } from './helpers';
 
   const dispatchEvent = createEventDispatcher<{
     select: SelectedType;
@@ -20,8 +21,8 @@
 
   $: slideIndex = $selectedNode1Index;
 
-  let slideHastNodeGroup: SlideHastNode[];
-  $: slideHastNodeGroup = $slideHasts[slideIndex];
+  let slideHastNodes: SlideHastNode[];
+  $: slideHastNodes = $slideHasts[slideIndex];
 
   //$: currentSlideSelectedIndexTraces = $selectedNodeIndexTracesMap[slideIndex] ?? [];
   let currentSlideSelectedIndexTraces2: [NodeIndexTrace, SelectedSourceDetail][];
@@ -49,20 +50,6 @@
       },
     ]);
   }
-
-  function findHastNodeByIndexTrace(
-    node: SlideHastNode,
-    indexTrace: number[]
-  ): SlideHastNode | undefined {
-    if (indexTrace.length === 0) return node;
-    if (node.type === 'text') return;
-
-    const [childIndex, ...remaining] = indexTrace;
-    const childNode = node.children[childIndex];
-    if (!childNode) return;
-
-    return findHastNodeByIndexTrace(childNode, remaining);
-  }
 </script>
 
 <aside>
@@ -79,9 +66,9 @@
     />
   </div>
   <h3>Nodes</h3>
-  {#if slideHastNodeGroup}
+  {#if slideHastNodes}
     <NestedHastElementList
-      hastNodes={slideHastNodeGroup}
+      hastNodes={slideHastNodes}
       selectedNodeIndexTraces2={currentSlideSelectedIndexTraces2}
       on:select={({ detail: indexTrace }) => triggerSelect(slideIndex, indexTrace)}
       on:select:more={({ detail: indexTrace }) => triggerSelectMore(slideIndex, indexTrace)}
@@ -92,10 +79,13 @@
   {#if currentSlideSelectedIndexTraces2.length > 0}
     <h3>Styles</h3>
     {#if currentSlideSelectedIndexTraces2.length === 1}
-      {@const nodeTrace = currentSlideSelectedIndexTraces2[0][0]}
+      {@const firstSelection = currentSlideSelectedIndexTraces2[0]}
+      {@const [nodeTrace] = firstSelection}
+      {@const [nodeIndex] = nodeTrace}
       {@const selectedNode = findHastNodeByIndexTrace(
-        slideHastNodeGroup[nodeTrace?.[0]],
-        nodeTrace?.slice(1)
+        slideHastNodes[nodeIndex],
+        nodeIndex,
+        firstSelection
       )}
       {#if selectedNode && selectedNode.type === 'element'}
         <StylesProperty node={selectedNode} />

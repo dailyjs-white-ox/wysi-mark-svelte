@@ -5,67 +5,22 @@
   import type { HastElement, HastText } from 'mdast-util-to-hast/lib/state';
 
   import { markdown, type SlideHastNode } from '$lib/source_stores';
+  import { firstLine } from '$lib/source_helpers';
+  import { checkIndexTraceMatch } from './PropertiesSidebar/helpers';
   import type { WithTarget } from '$lib/utils/types';
   import type { NodeIndexTrace, SelectedSourceDetail } from '$lib/selected_stores';
-  import { firstLine } from '$lib/source_helpers';
-  import { checkStyleWrapperElement } from '$lib/source/hast/style_wrapper';
 
   const dispatchEvent = createEventDispatcher<{ select: number[]; 'select:more': number[] }>();
 
   export let hastNodes: SlideHastNode[];
   export let depth = 0;
 
-  // export let selectedNodeIndexTraces: NodeIndexTrace[] = [];
   export let selectedNodeIndexTraces2: [NodeIndexTrace, SelectedSourceDetail][] = [];
 
-  // { [nodeIndex] => boolean }
-  //$: nodeSelectedMap = hastNodes.reduce<{ [nodeIndex: number]: boolean }>((memo, _, nodeIndex) => {
-  //  const match = selectedNodeIndexTraces.find(
-  //    (trace) => trace.length === 1 && trace[0] === nodeIndex
-  //  );
-  //  memo[nodeIndex] = Boolean(match);
-  //  return memo;
-  //}, {});
-
-  // { [nodeIndex] => boolean }
-  // $: nextSelectedNodeIndexTracesMap = hastNodes.reduce<{ [nodeIndex: number]: NodeIndexTrace[] }>(
-  //   (memo, _, nodeIndex) => {
-  //     memo[nodeIndex] = selectedNodeIndexTraces
-  //       .filter((trace) => trace[0] === nodeIndex)
-  //       .map((trace) => trace.slice(1));
-  //     return memo;
-  //   },
-  //   {}
-  // );
-
-  function checkTraceMatch(
-    [trace, source]: [NodeIndexTrace, SelectedSourceDetail],
-    hastNode: SlideHastNode,
-    nodeIndex: number
-  ) {
-    if (trace.length === 1 && trace[0] === nodeIndex) {
-      return true;
-    }
-
-    if (trace.length === 2) {
-      const wrapperType = checkStyleWrapperElement(hastNode);
-      if (
-        wrapperType === 'outer' &&
-        hastNode.type === 'element' &&
-        source.source !== 'Properties'
-      ) {
-        const { children } = hastNode;
-        if (children.length === 1) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
   $: nodeSelectedMap = hastNodes.reduce((memo, node, nodeIndex) => {
-    const match = selectedNodeIndexTraces2.find((tuple) => checkTraceMatch(tuple, node, nodeIndex));
+    const match = selectedNodeIndexTraces2.find((traceTuple) =>
+      checkIndexTraceMatch(traceTuple, node, nodeIndex)
+    );
     memo[nodeIndex] = Boolean(match);
     return memo;
   }, {} as Record<number, boolean>);
@@ -85,6 +40,7 @@
     if (hastNodes) {
       if (!nodesOpen) {
         nodesOpen = hastNodes.map(() => false);
+        checkIndexTraceMatch;
       } else if (nodesOpen.length !== hastNodes.length) {
         nodesOpen = hastNodes.map(() => false);
       }
@@ -177,8 +133,9 @@
               {nodesOpen[nodeIndex] ? '-' : '+'}
             </button>
           {:else if node.type === 'text'}
-            <!-- <textarea value={node.value} on:input={(ev) => onInputText(ev, node)} /> -->
-            <code>{node.value}</code>
+            {@const value = node.value.trim()}
+            <textarea {value} on:input={(ev) => onInputText(ev, node)} />
+            <!-- <code>{node.value}</code> -->
           {/if}
         </div>
 
