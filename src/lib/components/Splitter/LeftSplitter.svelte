@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, tick } from 'svelte';
   import { draggable } from '@neodrag/svelte';
+  import { getContext } from 'svelte';
+  import type { Readable } from 'svelte/store';
 
   type DragEventData = {
     /** How much element moved from its original position horizontally */
@@ -21,30 +23,47 @@
 
   let className = '';
   export { className as class };
-  export let borderColor: string | undefined = undefined;
 
   export let disabled = false;
   export let visible = true;
 
   export let left: number | string | undefined = undefined;
-
   let leftPx: number | undefined = undefined;
+
+  let widthPx: number | undefined = undefined;
+  $: width = unlessUndefined(widthPx, (value) => `${value}px`);
+  export { widthPx as width };
+
+  export let borderColor: string | undefined = undefined;
+  export let backgroundColor: string | undefined = undefined;
 
   let phantom = false;
   let phantomEl: HTMLElement;
   $: if (typeof left === 'string') {
-    // console.log('🚀 left:', left);
-    getPhantomLeft(left).then((value) => {
-      leftPx = value;
-    });
+    updateLeftPx(left);
   } else {
     leftPx = left;
   }
 
+  const rect = getContext<Readable<DOMRect>>('splitter');
+  rect.subscribe(($rect) => {
+    if (!$rect) return;
+    if (typeof left === 'string') {
+      updateLeftPx(left);
+    }
+  });
+
+  async function updateLeftPx(left: string) {
+    console.log('🚀 left:', left);
+    getPhantomLeft(left).then((value) => {
+      leftPx = value;
+    });
+  }
+
   async function getPhantomLeft(left: string) {
     phantom = true;
-
     await tick();
+
     const phantomRect = phantomEl?.getBoundingClientRect();
     if (!phantomRect) return;
     console.log('phantom left:', phantomRect.left, { left, phantomEl, phantomRect });
@@ -53,9 +72,12 @@
     return phantomRect.left;
   }
 
-  let widthPx: number | undefined = undefined;
-  $: width = unlessUndefined(widthPx, (value) => `${value}px`);
-  export { widthPx as width };
+  function mapStyles(styleTuples: [string, string | undefined][]): string {
+    return styleTuples
+      .filter(([_key, value]) => value)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(';');
+  }
 
   function unlessUndefined<T, S>(value: T | undefined, getter: (value: T) => S): S | undefined {
     if (typeof value === 'undefined') {
@@ -70,8 +92,11 @@
     class:splitter={true}
     class:disabled
     class={className}
-    style:--border-color={borderColor}
-    style={width === undefined ? '' : `--line-width={width}`}
+    style={mapStyles([
+      ['--line-width', width],
+      ['--border-color', borderColor],
+      ['--background-color', backgroundColor],
+    ])}
     use:draggable={{
       axis: 'x',
       position: { x: leftPx ?? 0, y: 0 },

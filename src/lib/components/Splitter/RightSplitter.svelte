@@ -1,12 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte';
-  import type { Writable } from 'svelte/store';
+  import type { Readable } from 'svelte/store';
 
   import LeftSplitter from './LeftSplitter.svelte';
 
   const dispatchEvent = createEventDispatcher();
 
-  const rect = getContext<Writable<DOMRect>>('splitter');
+  const rect = getContext<Readable<DOMRect>>('splitter');
 
   export let right: number | undefined = undefined;
   $: left = right === undefined || $rect === undefined ? undefined : $rect.width - right;
