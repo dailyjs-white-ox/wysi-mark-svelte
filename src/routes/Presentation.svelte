@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, afterUpdate } from 'svelte';
+  import Prism from 'prismjs';
   import { slides } from '$lib/source_stores';
 
   type Direction = 'prev' | 'next';
@@ -21,6 +22,9 @@
     page += 1;
   }
 
+  afterUpdate(() => {
+    Prism.highlightAll();
+  });
   onMount(() => {
     slideWidth = section.getBoundingClientRect().width;
   });

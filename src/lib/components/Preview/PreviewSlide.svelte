@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher, tick } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
   import { toHtml } from 'hast-util-to-html';
+  import Prism from 'prismjs';
 
   import { buildSlideIndexClassName } from './utils';
   import type { HastContent } from 'mdast-util-to-hast/lib';
@@ -15,14 +16,13 @@
   export let isSelected = false;
   export let hastNodes: HastContent[];
   export let selectedNodeTraces: number[][];
-
   let ref: HTMLElement;
 
-  $: slideHtml = hastNodes.map((node) => toHtml(node)).join('');
+  $: slideHtmls = hastNodes.map((node) => toHtml(node));
 
   // toggle class for selected nodes
   // FIXME: using vanilla DOM javascript here. Make it more svelty.
-  $: if (slideHtml && selectedNodeTraces && ref) {
+  $: if (slideHtmls && selectedNodeTraces && ref) {
     ref.querySelectorAll('.selected-node').forEach((el) => {
       el.classList.remove('selected-node');
     });
@@ -81,6 +81,9 @@
       dispatchEvent('select', nodeIndexTrace);
     }
   }
+  onMount(() => {
+    Prism.highlightAll();
+  });
 </script>
 
 <article
@@ -92,7 +95,9 @@
   on:keydown
   on:click|preventDefault={handleClick}
 >
-  {@html slideHtml}
+  {#each slideHtmls as slideHtml}
+    {@html slideHtml}
+  {/each}
 </article>
 
 <style>
