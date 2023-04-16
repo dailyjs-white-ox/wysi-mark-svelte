@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher, tick } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
   import { toHtml } from 'hast-util-to-html';
 
   import { buildSlideIndexClassName } from './utils';
   import type { HastContent } from 'mdast-util-to-hast/lib';
   import type { WithTarget } from '$lib/utils/types';
+  import PreviewSlideContent from './PreviewSlideContent.svelte';
 
   const dispatchEvent = createEventDispatcher<{
     select: number[];
@@ -15,14 +16,13 @@
   export let isSelected = false;
   export let hastNodes: HastContent[];
   export let selectedNodeTraces: number[][];
-
   let ref: HTMLElement;
 
-  $: slideHtml = hastNodes.map((node) => toHtml(node)).join('');
+  $: slideHtmls = hastNodes.map((node) => toHtml(node));
 
   // toggle class for selected nodes
   // FIXME: using vanilla DOM javascript here. Make it more svelty.
-  $: if (slideHtml && selectedNodeTraces && ref) {
+  $: if (slideHtmls && selectedNodeTraces && ref) {
     ref.querySelectorAll('.selected-node').forEach((el) => {
       el.classList.remove('selected-node');
     });
@@ -92,7 +92,7 @@
   on:keydown
   on:click|preventDefault={handleClick}
 >
-  {@html slideHtml}
+  <PreviewSlideContent {slideHtmls} />
 </article>
 
 <style>
