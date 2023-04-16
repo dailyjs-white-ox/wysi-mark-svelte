@@ -1,11 +1,11 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, tick } from 'svelte';
   import { toHtml } from 'hast-util-to-html';
-  import Prism from 'prismjs';
 
   import { buildSlideIndexClassName } from './utils';
   import type { HastContent } from 'mdast-util-to-hast/lib';
   import type { WithTarget } from '$lib/utils/types';
+  import PreviewSlideContent from './PreviewSlideContent.svelte';
 
   const dispatchEvent = createEventDispatcher<{
     select: number[];
@@ -81,9 +81,6 @@
       dispatchEvent('select', nodeIndexTrace);
     }
   }
-  onMount(() => {
-    Prism.highlightAll();
-  });
 </script>
 
 <article
@@ -95,9 +92,7 @@
   on:keydown
   on:click|preventDefault={handleClick}
 >
-  {#each slideHtmls as slideHtml}
-    {@html slideHtml}
-  {/each}
+  <PreviewSlideContent {slideHtmls} />
 </article>
 
 <style>
