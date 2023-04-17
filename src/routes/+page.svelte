@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  import { page } from '$app/stores';
   import { markdown } from '$lib/source_stores';
   import { selecteds, selectedNode1Index, type SelectedType } from '$lib/selected_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
@@ -8,12 +9,16 @@
   import Presentation from './Presentation.svelte';
   import ContentsSidebar from './ContentsSidebar.svelte';
   import PropertiesSidebar from '../lib/components/PropertiesSidebar/PropertiesSidebar.svelte';
-  import Textarea from '$lib/components/Editor/Textarea.svelte';
   import CodeMirror5Editor from '$lib/components/Editor/CodeMirror5/Editor.svelte';
   import Splitter from '$lib/components/Splitter/LeftSplitter.svelte';
   import RightSplitter from '$lib/components/Splitter/RightSplitter.svelte';
   import SplitContainer from '$lib/components/Splitter/Container.svelte';
   import type { Snapshot } from './$types';
+  import { getGistContent } from '$lib/utils/gist';
+  import {
+    hasMissingThematicBreaks,
+    insertThematicBreaksBeforeEachHeadings,
+  } from '$lib/source_helpers';
 
   let showPresentation = false;
   let showToc = true;
@@ -121,11 +126,39 @@
     }
   }
 
+  async function handleGistPage(pageHash: string): Promise<boolean> {
+    let gistContent = await getGistContent(pageHash);
+    if (!gistContent) {
+      return false;
+    }
+
+    // // ask to insert slide delimiter
+    // const hasMissingBreak = hasMissingThematicBreaks(gistContent);
+    // if (hasMissingBreak) {
+    //   const yes = confirm('Insert slide delimiters?');
+    //   if (yes) {
+    //     gistContent = insertThematicBreaksBeforeEachHeadings(gistContent);
+    //   }
+    // }
+
+    $markdown = gistContent;
+    return true;
+  }
+
   let didMount = false;
-  onMount(() => {
-    const restoredValue = restoreSessionStorageSnapshot();
+  onMount(async () => {
     didMount = true;
+
+    // handle /#/gist/USERNAME/GISTID
+    const pageHash = $page.url.hash.slice(1);
+    if (pageHash.startsWith('/gist/')) {
+      const handled = await handleGistPage(pageHash);
+      if (handled) return;
+    }
+
+    const restoredValue = restoreSessionStorageSnapshot();
   });
+
   // run this after mount
   $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties, _$selecteds) => {
     if (!didMount) return;
