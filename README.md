@@ -8,13 +8,14 @@ It aims on three things:
 2. Easy styling: Add styles and transitions to slides like any other GUI programs -- just like you do in Keynote, Powerpoint, Google Slides, because that's easier.
 3. No install: Host your slide content on the web, because you don't want to run your own server just to share ideas.
 
-Checkout the [demo](https://dailyjs-white-ox.github.io/wysi-mark-svelte/).
+Checkout the [online demo](https://dailyjs-white-ox.github.io/wysi-mark-svelte/), or the video on [youtube](https://youtu.be/SaRAfoQh4-A).
 
-<video>
-  <source src="./docs/assets/wysi-mark_demo_video.mov" type="video/quicktime">
-  Your browser does not support the video tag.
-</video>
-
+<div align="center">
+    
+[<img src="https://img.youtube.com/vi/SaRAfoQh4-A/maxresdefault.jpg" width="50%">](https://youtu.be/SaRAfoQh4-A)
+  
+</div>  
+  
 ## Features
 
 Here are some features that is implemented (few), and is on the roadmap.
