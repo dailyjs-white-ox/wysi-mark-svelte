@@ -5,10 +5,10 @@ This is a A markdown-driven WYSIWYG(What You See Is What You Get) slide editor.
 It aims on three things:
 
 1. Markdown first: Write content (or some portion of it) in plain text, because it's easier to write with.
-
 2. Easy styling: Add styles and transitions to slides like any other GUI programs -- just like you do in Keynote, Powerpoint, Google Slides, because that's easier.
-
 3. No install: Host your slide content on the web, because you don't want to run your own server just to share ideas.
+
+Checkout the [demo](https://dailyjs-white-ox.github.io/wysi-mark-svelte/).
 
 ## Features
 
