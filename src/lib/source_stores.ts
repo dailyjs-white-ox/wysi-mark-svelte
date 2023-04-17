@@ -45,9 +45,19 @@ function turnMdastToSanitizedHast(mdastTree: MdastRoot, source: string): HastNod
 }
 
 // markdown-driven
+export const WELCOME_MESSAGE = `
+# Welcome
+
+welcome to [wysi mark](https://github.com/dailyjs-white-ox/wysi-mark-svelte) !
+
+Try the followings:
+* write content in markdown
+* **click me** and try adding styles in the right side bar
+* split into a new slide by adding a separator "\`-- -\`"
+  `;
 
 export const markdown = (() => {
-  const store = writable('');
+  const store = writable(WELCOME_MESSAGE);
 
   /** Update store on specific range */
   function updateAt({ start, end }: { start: number; end: number }, value: string) {

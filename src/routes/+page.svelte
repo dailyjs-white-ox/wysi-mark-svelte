@@ -3,7 +3,7 @@
   import type { Snapshot } from './$types';
 
   import { page } from '$app/stores';
-  import { markdown } from '$lib/source_stores';
+  import { WELCOME_MESSAGE, markdown } from '$lib/source_stores';
   import { selecteds, selectedNode1Index, type SelectedType } from '$lib/selected_stores';
   import useSessionStorageSnapshot from '$lib/use_session_storage_snapshot';
   import Preview from '$lib/components/Preview/Preview.svelte';
@@ -34,17 +34,6 @@
   let prevEditorWidthRatio = editorWidthRatio;
   let _previewWidthRatio: number; // soley depends on editorWidthRatio
   $: _previewWidthRatio = 1.0 - editorWidthRatio;
-
-  const WELCOME_MESSAGE = `
-# Welcome
-
-welcome to [wysi mark](https://github.com/dailyjs-white-ox/wysi-mark-svelte) !
-
-Try the followings:
-* write content in markdown
-* **click me** and try adding styles in the right side bar
-* split into a new slide by adding a separator "\`-- -\`"
-  `;
 
   export const snapshot: Snapshot = {
     capture: () => ({
