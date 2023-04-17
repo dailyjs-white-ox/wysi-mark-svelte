@@ -15,6 +15,10 @@
   import SplitContainer from '$lib/components/Splitter/Container.svelte';
   import type { Snapshot } from './$types';
   import { getGistContent } from '$lib/utils/gist';
+  import {
+    guessSufficientThematicBreaks,
+    insertThematicBreaksBeforeEachHeadings,
+  } from '$lib/source_helpers';
 
   let showPresentation = false;
   let showToc = true;
@@ -122,17 +126,34 @@
     }
   }
 
+  async function handleGistPage(pageHash: string): Promise<boolean> {
+    let gistContent = await getGistContent(pageHash);
+    if (!gistContent) {
+      return false;
+    }
+
+    // ask to insert slide delimiter
+    const hasMissingBreak = guessSufficientThematicBreaks(gistContent);
+    if (hasMissingBreak) {
+      const yes = confirm('Insert slide delimiters?');
+      if (yes) {
+        gistContent = insertThematicBreaksBeforeEachHeadings(gistContent);
+      }
+    }
+
+    $markdown = gistContent;
+    return true;
+  }
+
   let didMount = false;
   onMount(async () => {
     didMount = true;
 
+    // handle /#/gist/USERNAME/GISTID
     const pageHash = $page.url.hash.slice(1);
     if (pageHash.startsWith('/gist/')) {
-      const gistContent = await getGistContent(pageHash);
-      if (gistContent) {
-        $markdown = gistContent;
-        return;
-      }
+      const handled = await handleGistPage(pageHash);
+      if (handled) return;
     }
 
     const restoredValue = restoreSessionStorageSnapshot();
