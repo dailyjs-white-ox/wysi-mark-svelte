@@ -35,6 +35,17 @@
   let _previewWidthRatio: number; // soley depends on editorWidthRatio
   $: _previewWidthRatio = 1.0 - editorWidthRatio;
 
+  const WELCOME_MESSAGE = `
+# Welcome
+
+welcome to [wysi mark](https://github.com/dailyjs-white-ox/wysi-mark-svelte) !
+
+Try the followings:
+* write content in markdown
+* **click me** and try adding styles in the right side bar
+* split into a new slide by adding a separator "\`-- -\`"
+  `;
+
   export const snapshot: Snapshot = {
     capture: () => ({
       markdown: $markdown,
@@ -45,7 +56,8 @@
       selectedSlideIndex: $selectedNode1Index,
     }),
     restore: (state) => {
-      $markdown = state.markdown ?? '';
+      $markdown = state.markdown || WELCOME_MESSAGE;
+      console.log('🚀 ~ file: +page.svelte:60 ~ $markdown:', $markdown, { state });
       showToc = state.showToc;
       showEditor = state.showEditor;
       showProperties = state.showProperties;
