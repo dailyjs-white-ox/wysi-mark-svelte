@@ -10,6 +10,8 @@ It aims on three things:
 
 Checkout the [demo](https://dailyjs-white-ox.github.io/wysi-mark-svelte/).
 
+<video src="./docs/assets/wysi-mark_demo_video.mov" />
+
 ## Features
 
 Here are some features that is implemented (few), and is on the roadmap.
