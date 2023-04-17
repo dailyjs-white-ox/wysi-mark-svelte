@@ -10,7 +10,10 @@ It aims on three things:
 
 Checkout the [demo](https://dailyjs-white-ox.github.io/wysi-mark-svelte/).
 
-<video src="./docs/assets/wysi-mark_demo_video.mov" />
+<video>
+  <source src="./docs/assets/wysi-mark_demo_video.mov" type="video/quicktime">
+  Your browser does not support the video tag.
+</video>
 
 ## Features
 
