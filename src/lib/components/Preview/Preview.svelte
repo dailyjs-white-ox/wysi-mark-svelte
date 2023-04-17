@@ -15,7 +15,6 @@
   let slideIndex: number = 0;
   let selectedNodeIndexTrace: number[] | undefined;
   $: slideIndex = $selected1?.[0] ?? 0;
-  $: console.log('🚀 slideIndex:', slideIndex);
   $: selectedNodeIndexTrace = $selected1?.[1];
 
   let ref: HTMLElement;

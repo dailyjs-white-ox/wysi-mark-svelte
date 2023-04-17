@@ -29,6 +29,7 @@
         on:click={() => triggerSelect(index)}
         on:keydown
       >
+        <span class="slide-number">{index + 1}.</span>
         <span class="title" {title}>{title}</span>
       </li>
     {/each}
@@ -42,13 +43,28 @@
     border-right: 1px solid black;
   }
   ol {
-    margin: 0;
+    margin: 8px 0;
+    padding: 0 0 0 0px;
     overflow: auto;
   }
+  li {
+    margin: 4px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: #666;
+    cursor: pointer;
+  }
+  li:hover {
+    color: black;
+  }
   li.selected {
+    color: black;
     outline: 2px solid #666;
   }
-  .title {
-    white-space: nowrap;
+  .slide-number {
+    display: inline-block;
+    min-width: 20px;
+    text-align: right;
   }
 </style>

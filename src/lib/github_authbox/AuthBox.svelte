@@ -9,6 +9,7 @@
   import type { User } from 'firebase/auth';
 
   export let checkingLabel = 'Checking...';
+  export let flex: boolean | 'row' | 'column' | undefined = undefined;
 
   let currentUser: User | null = null;
   let loginStatus: boolean | undefined = undefined; // 3 states, not 2 (undefined refers to "checking..")
@@ -37,7 +38,11 @@
   });
 </script>
 
-<div class="auth-box">
+<div
+  class="auth-box"
+  style:display={flex ? 'flex' : 'block'}
+  style:flex-direction={flex ? flex && 'row' : null}
+>
   {#if loginStatus === undefined}
     <button disabled>{checkingLabel}</button>
   {:else if loginStatus === true}

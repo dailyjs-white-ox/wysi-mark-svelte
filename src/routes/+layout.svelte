@@ -2,8 +2,8 @@
   import AuthBox from '$lib/github_authbox/AuthBox.svelte';
 
   let maximized = false;
-  let headerHeight = 60;
-  let footerHeight = 60;
+  let headerHeight = 40;
+  let footerHeight = 32;
 
   function toggleMax() {
     maximized = !maximized;
@@ -13,8 +13,8 @@
     headerHeight = 20;
     footerHeight = 0;
   } else {
-    headerHeight = 60;
-    footerHeight = 60;
+    headerHeight = 40;
+    footerHeight = 32;
   }
 </script>
 
@@ -24,22 +24,26 @@
   style:--footer-height={`${footerHeight}px`}
 >
   <header>
-    <h1>wysi mark</h1>
+    <h1><a href="/">WYSI mark</a></h1>
     <div class="right">
-      <button type="button" on:click={toggleMax}>Max</button>
-      <AuthBox checkingLabel="Login" />
+      <!-- <button type="button" on:click={toggleMax}>Max</button> -->
+      <AuthBox checkingLabel="Login" flex />
     </div>
   </header>
   <div>
     <slot {maximized} />
   </div>
-  <footer>footer</footer>
+  <footer>
+    <a href="https://github.com/dailyjs-white-ox/wysi-mark-svelte" target="_blank" rel="noreferrer"
+      >github</a
+    >
+  </footer>
 </div>
 
 <style>
   .app {
-    --header-height: 60px;
-    --footer-height: 60px;
+    --header-height: 40px;
+    --footer-height: 24px;
     overflow: hidden;
   }
 
@@ -82,19 +86,32 @@
     bottom: calc(-1 * var(--shadow-height));
     background: var(--shadow-gradient);
   }
+  .app > div {
+    grid-area: content;
+  }
+  footer {
+    grid-area: footer;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 4px;
+
+    border-top: 1px solid black;
+  }
+
   header h1 {
     margin: 0;
     font-size: 1rem;
   }
   header > div.right {
     display: flex;
+    align-items: center;
     gap: 4px;
   }
-  .app > div {
-    grid-area: content;
+  header :global(button) {
+    height: 24px;
   }
-  footer {
-    grid-area: footer;
-    border-top: 1px solid black;
+  h1 a {
   }
 </style>

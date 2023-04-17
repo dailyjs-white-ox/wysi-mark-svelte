@@ -77,7 +77,6 @@
   }
 
   export function setCursor(pos: Position) {
-    //console.log('🚀 setCursor:', pos);
     if (editor) editor.setCursor(pos);
   }
 
@@ -183,12 +182,8 @@
     if (destroyed) return;
 
     editor = CodeMirrorModule.fromTextArea(refs.editor as HTMLTextAreaElement, opts);
-    globalThis.cm = editor;
-    console.log(
-      '🚀 ~ file: CodeMirror5.svelte:162 ~ createEditor ~ refs.editor, opts:',
-      opts,
-      editor
-    );
+    // globalThis.cm = editor;
+    // console.log( '🚀 ~ file: CodeMirror5.svelte:162 ~ createEditor ~ refs.editor, opts:', opts, editor);
 
     editor.on('change', (instance) => {
       if (!updating_externally) {

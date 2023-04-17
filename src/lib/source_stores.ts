@@ -40,10 +40,7 @@ function turnMdastToSanitizedHast(mdastTree: MdastRoot, source: string): HastNod
   const hastTree1 = raw(hastTree0, { file: new VFile({ value: source }) });
 
   const hastTree2 = sanitize(hastTree1, sanitizeSchema);
-  console.log('🚀 ~ file: source_stores.ts:42 ~ turnMdastToSanitizedHast ~ hastTree2:', hastTree2, {
-    hastTree0,
-    hastTree1,
-  });
+  // console.log('🚀 ~ file: source_stores.ts:42 ~ turnMdastToSanitizedHast ~ hastTree2:', hastTree2, { hastTree0, hastTree1, });
   return hastTree2;
 }
 
@@ -125,7 +122,7 @@ export const slideHasts: Readable<SlideHastNode[][]> = derived(hast, ($hast) => 
     injectSlideLocalCssScope(groupNodes, groupIndex);
   });
 
-  console.log('🚀 $slideHasts', slideGroups);
+  // console.log('🚀 $slideHasts', slideGroups);
   return slideGroups;
 });
 

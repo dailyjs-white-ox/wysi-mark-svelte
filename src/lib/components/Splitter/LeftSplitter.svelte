@@ -54,7 +54,6 @@
   });
 
   async function updateLeftPx(left: string) {
-    console.log('🚀 left:', left);
     getPhantomLeft(left).then((value) => {
       leftPx = value;
     });
@@ -66,7 +65,6 @@
 
     const phantomRect = phantomEl?.getBoundingClientRect();
     if (!phantomRect) return;
-    console.log('phantom left:', phantomRect.left, { left, phantomEl, phantomRect });
     phantom = false;
 
     return phantomRect.left;
