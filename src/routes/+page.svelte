@@ -132,14 +132,14 @@
       return false;
     }
 
-    // ask to insert slide delimiter
-    const hasMissingBreak = hasMissingThematicBreaks(gistContent);
-    if (hasMissingBreak) {
-      const yes = confirm('Insert slide delimiters?');
-      if (yes) {
-        gistContent = insertThematicBreaksBeforeEachHeadings(gistContent);
-      }
-    }
+    // // ask to insert slide delimiter
+    // const hasMissingBreak = hasMissingThematicBreaks(gistContent);
+    // if (hasMissingBreak) {
+    //   const yes = confirm('Insert slide delimiters?');
+    //   if (yes) {
+    //     gistContent = insertThematicBreaksBeforeEachHeadings(gistContent);
+    //   }
+    // }
 
     $markdown = gistContent;
     return true;
