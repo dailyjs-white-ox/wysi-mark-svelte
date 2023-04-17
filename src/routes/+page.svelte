@@ -124,16 +124,20 @@
 
   let didMount = false;
   onMount(async () => {
-    const gistContent = await getGistContent($page.url.searchParams.get('gist-id'));
+    didMount = true;
 
-    if (gistContent) {
-      $markdown = gistContent;
-    } else {
-      const restoredValue = restoreSessionStorageSnapshot();
+    const pageHash = $page.url.hash.slice(1);
+    if (pageHash.startsWith('/gist/')) {
+      const gistContent = await getGistContent(pageHash);
+      if (gistContent) {
+        $markdown = gistContent;
+        return;
+      }
     }
 
-    didMount = true;
+    const restoredValue = restoreSessionStorageSnapshot();
   });
+
   // run this after mount
   $: ((_$markdown, _showToc, _showEditor, _showPreview, _showProperties, _$selecteds) => {
     if (!didMount) return;
