@@ -16,7 +16,7 @@
   import type { Snapshot } from './$types';
   import { getGistContent } from '$lib/utils/gist';
   import {
-    guessSufficientThematicBreaks,
+    hasMissingThematicBreaks,
     insertThematicBreaksBeforeEachHeadings,
   } from '$lib/source_helpers';
 
@@ -133,7 +133,7 @@
     }
 
     // ask to insert slide delimiter
-    const hasMissingBreak = guessSufficientThematicBreaks(gistContent);
+    const hasMissingBreak = hasMissingThematicBreaks(gistContent);
     if (hasMissingBreak) {
       const yes = confirm('Insert slide delimiters?');
       if (yes) {
