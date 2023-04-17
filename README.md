@@ -1,38 +1,58 @@
-# create-svelte
+# WYSI-mark slide editor
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This is a A markdown-driven WYSIWYG(What You See Is What You Get) slide editor.
 
-## Creating a project
+It aims on three things:
 
-If you're seeing this, you've probably already done this step. Congrats!
+1. Markdown first: Write content (or some portion of it) in plain text, because it's easier to write with.
+2. Easy styling: Add styles and transitions to slides like any other GUI programs -- just like you do in Keynote, Powerpoint, Google Slides, because that's easier.
+3. No install: Host your slide content on the web, because you don't want to run your own server just to share ideas.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+Checkout the [demo](https://dailyjs-white-ox.github.io/wysi-mark-svelte/).
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+## Features
 
-## Developing
+Here are some features that is implemented (few), and is on the roadmap.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Basic Features
 
-```bash
-npm run dev
+- edit content via text
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+- markdown content is rendered into HTML
 
-## Building
+- slide specific syntax (`---` is evaluated as 'new slide')
 
-To create a production version of your app:
+- slide specific styles (local `<style />` tags)
 
-```bash
-npm run build
-```
+- save & load content (TBD)
 
-You can preview the production build with `npm run preview`.
+- render svelte components (TBD)
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+### Additional Features (work in progess)
+
+- more code-specific features:
+
+  - syntax highlighting
+  - folding & scrolling
+  - highlighting specific parts
+
+- simpler methods to add transitions
+
+- more simpler methods to add styles:
+
+  - apply user-defined styles
+  - add pug-like syntax
+  - tailwindcss support
+
+- nested outline
+
+- load 3rd-party components directly from:
+
+  - npm
+  - svelte repl
+  - raw file, such as github gist
+  - github repository
+
+- social features: login, like, clone, follow
+
+and others..!

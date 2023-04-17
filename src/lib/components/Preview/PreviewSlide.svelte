@@ -1,36 +1,50 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
   import { toHtml } from 'hast-util-to-html';
+
+  import { buildSlideIndexClassName } from './utils';
   import type { HastContent } from 'mdast-util-to-hast/lib';
-  const dispatchEvent = createEventDispatcher();
+  import type { WithTarget } from '$lib/utils/types';
+
+  const dispatchEvent = createEventDispatcher<{
+    select: number[];
+    'select:more': number[];
+  }>();
 
   export let slideIndex = 0;
   export let isSelected = false;
   export let hastNodes: HastContent[];
-  export let selectedNodeTrace: number[] | undefined;
+  export let selectedNodeTraces: number[][];
 
   let ref: HTMLElement;
 
   $: slideHtml = hastNodes.map((node) => toHtml(node)).join('');
 
-  // highlight selected slide & node
-  // FIXME: using vanilla javascript here. Make it more svelty.
-  $: if (isSelected && selectedNodeTrace && ref) {
-    const descendantNode = findDomNodeByIndexTrace(ref, selectedNodeTrace);
-    if (descendantNode) {
-      ref.querySelectorAll('.selected-node').forEach((el) => {
-        el.classList.remove('selected-node');
+  // toggle class for selected nodes
+  // FIXME: using vanilla DOM javascript here. Make it more svelty.
+  $: if (slideHtml && selectedNodeTraces && ref) {
+    ref.querySelectorAll('.selected-node').forEach((el) => {
+      el.classList.remove('selected-node');
+    });
+    if (isSelected) {
+      tick().then(() => {
+        const selectedEls =
+          selectedNodeTraces
+            .map((nodeTrace) => {
+              const descendant = findDomNodeByIndexTrace(ref, nodeTrace);
+              if (!descendant) return;
+              if (descendant.nodeType !== document.ELEMENT_NODE) {
+                console.error('uh-oh, this is not an element', descendant, { nodeTrace });
+                return;
+              }
+              return descendant;
+            })
+            .filter<Element>(Boolean) ?? [];
+        selectedEls.forEach((el) => {
+          el.classList.add('selected-node');
+        });
       });
-      if (!isElement(descendantNode)) {
-        console.error('uh-oh, this is not an element', descendantNode);
-      } else {
-        descendantNode.classList.add('selected-node');
-      }
     }
-  }
-
-  function isElement(node: Node): node is Element {
-    return node.nodeType === document.ELEMENT_NODE;
   }
 
   function findDomNodeByIndexTrace(element: Node, indexTrace: number[]): Node | undefined {
@@ -42,34 +56,63 @@
 
     return findDomNodeByIndexTrace(childNode, remaining);
   }
+
+  function handleClick(ev: WithTarget<MouseEvent, HTMLElement>) {
+    if (!ev.target) return;
+    const target = ev.target as HTMLElement;
+
+    const nodeIndexTrace = target.dataset['nodeIndexTrace']?.split('.').map(Number);
+    if (!nodeIndexTrace) return;
+
+    // specific
+    if (target.tagName === 'CODE' && target.parentElement?.tagName === 'PRE') {
+      nodeIndexTrace.pop();
+    }
+    if (target.tagName === 'DIV') {
+      // li > .inner-wrapper
+      if (target.classList.contains('li-inner-wrapper') && target.parentElement?.tagName === 'LI') {
+        // nodeIndexTrace.pop();
+      }
+    }
+
+    if (ev.metaKey) {
+      dispatchEvent('select:more', nodeIndexTrace);
+    } else {
+      dispatchEvent('select', nodeIndexTrace);
+    }
+  }
 </script>
 
 <article
   bind:this={ref}
-  class={`slide slide-index-${slideIndex}`}
+  class={buildSlideIndexClassName(slideIndex)}
+  class:slide={true}
   class:selected-slide={isSelected}
   tabindex="-1"
   on:keydown
-  on:click={(ev) => {
-    const nodeIndexTrace = ev.target?.dataset['nodeIndexTrace']?.split('.').map(Number);
-    if (!nodeIndexTrace) return;
-    dispatchEvent('select', nodeIndexTrace);
-  }}
+  on:click|preventDefault={handleClick}
 >
   {@html slideHtml}
 </article>
 
 <style>
-  article.slide {
-    overflow-y: auto;
-    min-width: calc(100% - 40px);
-    background-color: white;
-    aspect-ratio: 4 / 3;
+  @layer system {
+    article.slide {
+      scroll-snap-align: center;
+
+      overflow-y: auto;
+      min-width: calc(100% - 40px);
+      background-color: white;
+      aspect-ratio: 4 / 3;
+      user-select: text;
+    }
+    article.selected-slide {
+      outline: 2px solid #666;
+    }
+    article :global(.selected-node) {
+      outline: 2px dashed #999;
+    }
   }
-  article.selected-slide {
-    outline: 2px solid #666;
-  }
-  article :global(.selected-node) {
-    outline: 2px dashed #999;
+  @layer default {
   }
 </style>
