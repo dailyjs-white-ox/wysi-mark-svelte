@@ -23,6 +23,7 @@ console.log('publishing "build" directory to "gh-pages" branch...');
 publish(
   'build', // path to public directory
   {
+    src: ['**/*', '.nojekyll'],
     branch: 'gh-pages',
     repo: 'git@github.com:dailyjs-white-ox/wysi-mark-svelte.git',
     user: { name, email },
