@@ -113,22 +113,6 @@
     $selecteds = $selecteds;
   }
 
-  function toggleShowToc() {
-    showToc = !showToc;
-  }
-
-  function toggleShowProperties() {
-    showProperties = !showProperties;
-  }
-
-  function toggleShowEditor() {
-    showEditor = !showEditor;
-  }
-
-  function toggleShowPreview() {
-    showPreview = !showPreview;
-  }
-
   async function handleGistPage(pageHash: string): Promise<boolean> {
     let gistContent = await getGistContent(pageHash);
     if (!gistContent) {
@@ -182,14 +166,20 @@
   >
     <nav class="navigator">
       <div class="left">
-        <button aria-pressed={showToc} on:click={toggleShowToc}>ToC</button>
-        <button aria-pressed={showEditor} on:click={toggleShowEditor} disabled={!showPreview}
-          >Editor</button
+        <button aria-pressed={showToc} on:click={() => (showToc = !showToc)}>ToC</button>
+        <button
+          aria-pressed={showEditor}
+          disabled={!showPreview}
+          on:click={() => (showEditor = !showEditor)}>Editor</button
         >
-        <button aria-pressed={showPreview} on:click={toggleShowPreview} disabled={!showEditor}
-          >Preview</button
+        <button
+          aria-pressed={showPreview}
+          disabled={!showEditor}
+          on:click={() => (showPreview = !showPreview)}>Preview</button
         >
-        <button aria-pressed={showProperties} on:click={toggleShowProperties}>Properties</button>
+        <button aria-pressed={showProperties} on:click={() => (showProperties = !showProperties)}
+          >Properties</button
+        >
       </div>
       <div class="right">
         <button on:click={() => (showPresentation = true)}>Presentation</button>
