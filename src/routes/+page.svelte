@@ -30,9 +30,7 @@
 
   let editorWidthRatio = 0.5;
   let prevEditorWidthRatio = editorWidthRatio;
-  let _previewWidthRatio: number; // soley depends on editorWidthRatio
-  $: _previewWidthRatio = 1.0 - editorWidthRatio;
-  $: console.log('🚀 _previewWidthRatio:', _previewWidthRatio);
+  $: previewWidthRatio = 1.0 - editorWidthRatio;
 
   // update tocWidth on showToc
   $: {
@@ -54,8 +52,9 @@
     }
   }
 
-  $: editorWidthRatio = updateEditorWidthRatioOnShowEditor(showEditor);
-  $: editorWidthRatio = updateEditorWidthRatioOnShowPreview(showPreview);
+  // update editorWidthRatio on showEditor & showPreview
+  $: ({ editorWidthRatio } = updateEditorWidthRatioOnShowEditor(showEditor));
+  $: ({ editorWidthRatio } = updateEditorWidthRatioOnShowPreview(showPreview));
 
   function updateEditorWidthRatioOnShowEditor(showEditor: boolean) {
     if (showEditor) {
@@ -68,16 +67,7 @@
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 0.0;
     }
-    console.log(
-      '🚀 ~ file: +page.svelte:69 ~ updateEditorWidthRatioOnShowEditor ~ editorWidthRatio:',
-      editorWidthRatio,
-      {
-        showEditor,
-        showPreview,
-        prevEditorWidthRatio,
-      }
-    );
-    return editorWidthRatio;
+    return { editorWidthRatio };
   }
 
   function updateEditorWidthRatioOnShowPreview(showPreview: boolean) {
@@ -91,27 +81,7 @@
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 1.0;
     }
-    console.log(
-      '🚀 ~ file: +page.svelte:92 ~ updateEditorWidthRatioOnShowPreview ~ editorWidthRatio:',
-      editorWidthRatio,
-      {
-        showEditor,
-        showPreview,
-        prevEditorWidthRatio,
-      }
-    );
-    return editorWidthRatio;
-  }
-
-  // update editorWidthRatio on showEditor / showPreview
-  $: {
-    if (showEditor && showPreview) {
-    } else if (showEditor && !showPreview) {
-    } else if (!showEditor && showPreview) {
-    }
-    // never.
-    else {
-    }
+    return { editorWidthRatio };
   }
 
   export const snapshot: Snapshot = {
@@ -124,8 +94,6 @@
       selectedSlideIndex: $selectedNode1Index,
     }),
     restore: (state) => {
-      console.log('🚀 ~ file: +page.svelte:88 ~ state:', state);
-
       $markdown = state.markdown || WELCOME_MESSAGE;
       showToc = state.showToc;
       showEditor = state.showEditor;
@@ -221,7 +189,7 @@
     style:--toc-width={`${tocWidth}px`}
     style:--properties-width={`${propertiesWidth}px`}
     style:--editor-width={`minmax(0, ${editorWidthRatio * 100}fr)`}
-    style:--preview-width={`minmax(0, ${_previewWidthRatio * 100}fr)`}
+    style:--preview-width={`minmax(0, ${previewWidthRatio * 100}fr)`}
   >
     <nav class="navigator">
       <div class="left">
