@@ -45,8 +45,8 @@
       selectedSlideIndex: $selectedNode1Index,
     }),
     restore: (state) => {
+      console.log('🚀 ~ restore state:', state);
       $markdown = state.markdown || WELCOME_MESSAGE;
-      console.log('🚀 ~ file: +page.svelte:60 ~ $markdown:', $markdown, { state });
       showToc = state.showToc;
       showEditor = state.showEditor;
       showProperties = state.showProperties;
@@ -79,46 +79,76 @@
   function toggleShowToc() {
     if (showToc) {
       showToc = false;
+    } else {
+      showToc = true;
+    }
+  }
+
+  // update tocWidth on showToc
+  $: {
+    if (!showToc) {
       prevTocWidth = tocWidth;
       tocWidth = 0;
     } else {
-      showToc = true;
       tocWidth = prevTocWidth;
     }
   }
+
   function toggleShowProperties() {
     if (showProperties) {
       showProperties = false;
+    } else {
+      showProperties = true;
+    }
+  }
+
+  // update propertiesWidth on showProperties
+  $: {
+    if (!showProperties) {
       prevPropertiesWidth = propertiesWidth;
       propertiesWidth = 0;
     } else {
-      showProperties = true;
       propertiesWidth = prevPropertiesWidth;
     }
   }
 
   function toggleShowEditor() {
-    console.log('🚀 ~ toggleShowEditor ~ showEditor:', showEditor);
     if (showEditor) {
       showEditor = false;
+    } else {
+      showEditor = true;
+    }
+  }
+
+  // update editorWidthRatio on showEditor
+  $: {
+    if (!showEditor) {
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 0.0;
     } else {
-      showEditor = true;
       editorWidthRatio = prevEditorWidthRatio;
     }
-    console.log('🚀 ~ editorWidthRatio:', editorWidthRatio, { prevEditorWidthRatio });
   }
 
   function toggleShowPreview() {
     // turn showPreview on
     if (!showPreview) {
       showPreview = true;
-      editorWidthRatio = prevEditorWidthRatio;
     }
     // turn off
     else {
       showPreview = false;
+    }
+  }
+
+  // update editorWidthRatio on showPreview
+  $: {
+    // turn showPreview on
+    if (showPreview) {
+      editorWidthRatio = prevEditorWidthRatio;
+    }
+    // turn off
+    else {
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 1.0;
     }
