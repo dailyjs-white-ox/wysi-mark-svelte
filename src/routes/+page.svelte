@@ -27,13 +27,51 @@
   let propertiesWidth = 200;
   let prevTocWidth = tocWidth;
   let prevPropertiesWidth = propertiesWidth;
-  //$: propertiesWidth = showProperties ? prevTocWidth : 0;
-  //$: tocWidth = showToc ? prevTocWidth : 0;
 
   let editorWidthRatio = 0.5;
   let prevEditorWidthRatio = editorWidthRatio;
   let _previewWidthRatio: number; // soley depends on editorWidthRatio
   $: _previewWidthRatio = 1.0 - editorWidthRatio;
+
+  // update tocWidth on showToc
+  $: {
+    if (!showToc) {
+      prevTocWidth = tocWidth;
+      tocWidth = 0;
+    } else {
+      tocWidth = prevTocWidth;
+    }
+  }
+
+  // update propertiesWidth on showProperties
+  $: {
+    if (!showProperties) {
+      prevPropertiesWidth = propertiesWidth;
+      propertiesWidth = 0;
+    } else {
+      propertiesWidth = prevPropertiesWidth;
+    }
+  }
+
+  // update editorWidthRatio on showEditor
+  $: {
+    if (!showEditor) {
+      prevEditorWidthRatio = editorWidthRatio;
+      editorWidthRatio = 0.0;
+    } else {
+      editorWidthRatio = prevEditorWidthRatio;
+    }
+  }
+
+  // update editorWidthRatio on showPreview
+  $: {
+    if (showPreview) {
+      editorWidthRatio = prevEditorWidthRatio;
+    } else {
+      prevEditorWidthRatio = editorWidthRatio;
+      editorWidthRatio = 1.0;
+    }
+  }
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -45,7 +83,6 @@
       selectedSlideIndex: $selectedNode1Index,
     }),
     restore: (state) => {
-      console.log('🚀 ~ restore state:', state);
       $markdown = state.markdown || WELCOME_MESSAGE;
       showToc = state.showToc;
       showEditor = state.showEditor;
@@ -77,81 +114,19 @@
   }
 
   function toggleShowToc() {
-    if (showToc) {
-      showToc = false;
-    } else {
-      showToc = true;
-    }
-  }
-
-  // update tocWidth on showToc
-  $: {
-    if (!showToc) {
-      prevTocWidth = tocWidth;
-      tocWidth = 0;
-    } else {
-      tocWidth = prevTocWidth;
-    }
+    showToc = !showToc;
   }
 
   function toggleShowProperties() {
-    if (showProperties) {
-      showProperties = false;
-    } else {
-      showProperties = true;
-    }
-  }
-
-  // update propertiesWidth on showProperties
-  $: {
-    if (!showProperties) {
-      prevPropertiesWidth = propertiesWidth;
-      propertiesWidth = 0;
-    } else {
-      propertiesWidth = prevPropertiesWidth;
-    }
+    showProperties = !showProperties;
   }
 
   function toggleShowEditor() {
-    if (showEditor) {
-      showEditor = false;
-    } else {
-      showEditor = true;
-    }
-  }
-
-  // update editorWidthRatio on showEditor
-  $: {
-    if (!showEditor) {
-      prevEditorWidthRatio = editorWidthRatio;
-      editorWidthRatio = 0.0;
-    } else {
-      editorWidthRatio = prevEditorWidthRatio;
-    }
+    showEditor = !showEditor;
   }
 
   function toggleShowPreview() {
-    // turn showPreview on
-    if (!showPreview) {
-      showPreview = true;
-    }
-    // turn off
-    else {
-      showPreview = false;
-    }
-  }
-
-  // update editorWidthRatio on showPreview
-  $: {
-    // turn showPreview on
-    if (showPreview) {
-      editorWidthRatio = prevEditorWidthRatio;
-    }
-    // turn off
-    else {
-      prevEditorWidthRatio = editorWidthRatio;
-      editorWidthRatio = 1.0;
-    }
+    showPreview = !showPreview;
   }
 
   async function handleGistPage(pageHash: string): Promise<boolean> {
