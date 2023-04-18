@@ -252,6 +252,10 @@
 {/if}
 
 <style>
+  :global(html, body) {
+    overscroll-behavior-x: none;
+  }
+
   /* custom properties */
   main {
     --navbar-height: 40px;
