@@ -53,33 +53,22 @@
   }
 
   // update editorWidthRatio on showEditor & showPreview
-  $: ({ editorWidthRatio } = updateEditorWidthRatioOnShowEditor(showEditor));
-  $: ({ editorWidthRatio } = updateEditorWidthRatioOnShowPreview(showPreview));
+  $: ({ editorWidthRatio } = updateEditorWidthRatio(showEditor, showPreview));
 
-  function updateEditorWidthRatioOnShowEditor(showEditor: boolean) {
-    if (showEditor) {
-      if (showPreview) {
-        editorWidthRatio = prevEditorWidthRatio;
-      } else {
-        editorWidthRatio = 1.0;
-      }
-    } else {
+  function updateEditorWidthRatio(showEditor: boolean, showPreview: boolean) {
+    if (showPreview && showEditor) {
+      editorWidthRatio = prevEditorWidthRatio;
+    } else if (showPreview && !showEditor) {
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 0.0;
-    }
-    return { editorWidthRatio };
-  }
-
-  function updateEditorWidthRatioOnShowPreview(showPreview: boolean) {
-    if (showPreview) {
-      if (showEditor) {
-        editorWidthRatio = prevEditorWidthRatio;
-      } else {
-        editorWidthRatio = 0.0;
-      }
-    } else {
+    } else if (!showPreview && showEditor) {
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 1.0;
+    }
+    // never
+    else {
+      console.error('showPreviw and showEditor cannot be both false. returning to initial state.');
+      editorWidthRatio = 0.5;
     }
     return { editorWidthRatio };
   }
