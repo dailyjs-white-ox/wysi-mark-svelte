@@ -182,10 +182,14 @@
   >
     <nav class="navigator">
       <div class="left">
-        <button on:click={toggleShowToc}>ToC</button>
-        <button on:click={toggleShowEditor}>Editor</button>
-        <button on:click={toggleShowPreview}>Preview</button>
-        <button on:click={toggleShowProperties}>Properties</button>
+        <button aria-pressed={showToc} on:click={toggleShowToc}>ToC</button>
+        <button aria-pressed={showEditor} on:click={toggleShowEditor} disabled={!showPreview}
+          >Editor</button
+        >
+        <button aria-pressed={showPreview} on:click={toggleShowPreview} disabled={!showEditor}
+          >Preview</button
+        >
+        <button aria-pressed={showProperties} on:click={toggleShowProperties}>Properties</button>
       </div>
       <div class="right">
         <button on:click={() => (showPresentation = true)}>Presentation</button>
@@ -301,10 +305,22 @@
   .navigator > div {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
   }
   .navigator button {
     height: 24px;
+    position: relative;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  .navigator button[aria-pressed='true'] {
+    top: 1px;
+    left: 1px;
+    box-shadow: none;
+  }
+  .navigator button:disabled {
+    background-color: rgba(239, 239, 239, 0.7);
+    color: rgba(16, 16, 16, 0.7);
+    border-color: rgba(118, 118, 118, 0.1);
   }
 
   .toc {
