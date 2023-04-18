@@ -8,7 +8,6 @@ import { hastToMarkdown, hastToMarkdownWithHtmlHead } from './utils';
 
 export type { HastNodes, HastContent };
 
-// type WrapperType = 'inline' | 'block';
 type WrapperType = 'inner' | 'outer';
 
 type Offset = { start: number; end: number };
@@ -19,13 +18,6 @@ const innerWrapTags: { [key: string]: WrapperType } = {
   pre: 'outer',
 };
 
-// type HastElementWithOffset = HastElement & {
-//   position: {
-//     start: Point & { offset: number };
-//     end: Point & { offset: number };
-//   };
-// };
-
 type WithOffset<P extends UnistNode> = P & {
   position: {
     start: UnistPoint & { offset: number };
@@ -35,17 +27,32 @@ type WithOffset<P extends UnistNode> = P & {
 
 type HastElementWithOffset = WithOffset<HastElement>;
 
+function isHastElementWithOffset(hastNode: HastElement): hastNode is HastElementWithOffset {
+  if (hastNode.position?.start?.offset === undefined) return false;
+  if (hastNode.position?.end?.offset === undefined) return false;
+  return true;
+}
+
+/**
+ * Build a markdown source that is wrapped with a styled element.
+ *
+ * @param hastNode
+ * @param style
+ * @param markdownSource
+ * @returns markdown source and its accompanying position (undefined if none)
+ */
 export function buildMarkdownStyleWrapper(
   hastNode: HastElement,
   style: string,
   markdownSource: string
 ): [Offset, string] | undefined {
-  //console.log('style:', JSON.stringify(style), { hastNode: structuredClone(hastNode) });
-
   if (!hastNode.properties) hastNode.properties = { style: '' };
-  if (hastNode.position === undefined) return;
-  if (hastNode.position.start?.offset === undefined) return;
-  if (hastNode.position.end?.offset === undefined) return;
+  if (!isHastElementWithOffset(hastNode)) return;
+
+  // node is already as wrapper element
+  if (checkStyleWrapperElement(hastNode)) {
+    return buildInlineStyle(hastNode, style, markdownSource);
+  }
 
   // Some tags requires specific syntax to work and cannot be easily replaced with html.
   // Inject a wrapper INSIDE the tag and use that instead.
@@ -55,24 +62,13 @@ export function buildMarkdownStyleWrapper(
   }
   // 'inner'
   else if (wrapType === 'inner') {
-    return buildInnerStyleWrapper(hastNode as HastElementWithOffset, style, markdownSource);
+    return buildInnerStyleWrapper(hastNode, style, markdownSource);
   }
   // other hast nodes
   else {
-    return buildInlineStyle(hastNode as HastElementWithOffset, style);
+    return buildInlineStyle(hastNode, style, markdownSource);
   }
 }
-
-//// find start & end offset from chidlren nodes
-//function findPositionOffsetOfExtremeChildren(hastNode: HastElement) {
-//  const start = hastNode.children.find((childNode) => childNode.position?.start?.offset)?.position
-//    ?.start;
-//  const end = hastNode.children.findLast((childNode) => childNode.position?.end?.offset)?.position
-//    ?.end;
-//  if (start === undefined || end === undefined) return;
-//
-//  return { start, end };
-//}
 
 function buildInnerStyleWrapper(
   hastNode: HastElementWithOffset,
@@ -148,7 +144,8 @@ function buildOuterStyleWrapper(
 
 function buildInlineStyle(
   hastNode: HastElementWithOffset,
-  style: string
+  style: string,
+  markdownSource: string
 ): [Offset, string] | undefined {
   // keep children in markdown as text
   // const childrenMarkdown = markdownSource.slice(start.offset, end.offset);
@@ -239,6 +236,11 @@ function getChildMarkdownByLine(
   return childrenMarkdown;
 }
 
+/**
+ * Check if node is a wrapper element. If it is, return the wrapper type. Return false if not.
+ * @param node
+ * @returns either wrapper type, or false.
+ */
 export function checkStyleWrapperElement(node: HastContent): false | WrapperType {
   if (node.type !== 'element') return false;
 
