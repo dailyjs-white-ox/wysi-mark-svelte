@@ -32,6 +32,7 @@
   let prevEditorWidthRatio = editorWidthRatio;
   let _previewWidthRatio: number; // soley depends on editorWidthRatio
   $: _previewWidthRatio = 1.0 - editorWidthRatio;
+  $: console.log('🚀 _previewWidthRatio:', _previewWidthRatio);
 
   // update tocWidth on showToc
   $: {
@@ -53,23 +54,63 @@
     }
   }
 
-  // update editorWidthRatio on showEditor
-  $: {
-    if (!showEditor) {
+  $: editorWidthRatio = updateEditorWidthRatioOnShowEditor(showEditor);
+  $: editorWidthRatio = updateEditorWidthRatioOnShowPreview(showPreview);
+
+  function updateEditorWidthRatioOnShowEditor(showEditor: boolean) {
+    if (showEditor) {
+      if (showPreview) {
+        editorWidthRatio = prevEditorWidthRatio;
+      } else {
+        editorWidthRatio = 1.0;
+      }
+    } else {
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 0.0;
-    } else {
-      editorWidthRatio = prevEditorWidthRatio;
     }
+    console.log(
+      '🚀 ~ file: +page.svelte:69 ~ updateEditorWidthRatioOnShowEditor ~ editorWidthRatio:',
+      editorWidthRatio,
+      {
+        showEditor,
+        showPreview,
+        prevEditorWidthRatio,
+      }
+    );
+    return editorWidthRatio;
   }
 
-  // update editorWidthRatio on showPreview
-  $: {
+  function updateEditorWidthRatioOnShowPreview(showPreview: boolean) {
     if (showPreview) {
-      editorWidthRatio = prevEditorWidthRatio;
+      if (showEditor) {
+        editorWidthRatio = prevEditorWidthRatio;
+      } else {
+        editorWidthRatio = 0.0;
+      }
     } else {
       prevEditorWidthRatio = editorWidthRatio;
       editorWidthRatio = 1.0;
+    }
+    console.log(
+      '🚀 ~ file: +page.svelte:92 ~ updateEditorWidthRatioOnShowPreview ~ editorWidthRatio:',
+      editorWidthRatio,
+      {
+        showEditor,
+        showPreview,
+        prevEditorWidthRatio,
+      }
+    );
+    return editorWidthRatio;
+  }
+
+  // update editorWidthRatio on showEditor / showPreview
+  $: {
+    if (showEditor && showPreview) {
+    } else if (showEditor && !showPreview) {
+    } else if (!showEditor && showPreview) {
+    }
+    // never.
+    else {
     }
   }
 
@@ -83,6 +124,8 @@
       selectedSlideIndex: $selectedNode1Index,
     }),
     restore: (state) => {
+      console.log('🚀 ~ file: +page.svelte:88 ~ state:', state);
+
       $markdown = state.markdown || WELCOME_MESSAGE;
       showToc = state.showToc;
       showEditor = state.showEditor;
