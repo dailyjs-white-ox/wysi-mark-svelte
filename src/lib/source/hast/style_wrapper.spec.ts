@@ -9,9 +9,10 @@ import { removePosition } from 'unist-util-remove-position';
 import { select } from 'hast-util-select';
 import type { HastRoot, HastElement } from 'mdast-util-to-hast/lib/state';
 import type { Node } from 'hast';
-import { trimLeads } from './utils/trim_leads';
-import { buildMarkdownStyleWrapper } from './source/hast/style_wrapper';
-import { removeBlankTextNodes, replaceMarkdownAt } from './source/hast/utils';
+
+import { trimLeads } from '$lib/utils/trim_leads';
+import { buildMarkdownStyleWrapper } from './style_wrapper';
+import { removeBlankTextNodes, replaceMarkdownAt } from './utils';
 
 describe('computeInsertStyle', () => {
   describe.skip('inline', () => {
