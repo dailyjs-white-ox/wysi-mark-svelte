@@ -27,13 +27,51 @@
   let propertiesWidth = 200;
   let prevTocWidth = tocWidth;
   let prevPropertiesWidth = propertiesWidth;
-  //$: propertiesWidth = showProperties ? prevTocWidth : 0;
-  //$: tocWidth = showToc ? prevTocWidth : 0;
 
   let editorWidthRatio = 0.5;
   let prevEditorWidthRatio = editorWidthRatio;
-  let _previewWidthRatio: number; // soley depends on editorWidthRatio
-  $: _previewWidthRatio = 1.0 - editorWidthRatio;
+  $: previewWidthRatio = 1.0 - editorWidthRatio;
+
+  // update tocWidth on showToc
+  $: {
+    if (!showToc) {
+      prevTocWidth = tocWidth;
+      tocWidth = 0;
+    } else {
+      tocWidth = prevTocWidth;
+    }
+  }
+
+  // update propertiesWidth on showProperties
+  $: {
+    if (!showProperties) {
+      prevPropertiesWidth = propertiesWidth;
+      propertiesWidth = 0;
+    } else {
+      propertiesWidth = prevPropertiesWidth;
+    }
+  }
+
+  // update editorWidthRatio on showEditor & showPreview
+  $: ({ editorWidthRatio } = updateEditorWidthRatio(showEditor, showPreview));
+
+  function updateEditorWidthRatio(showEditor: boolean, showPreview: boolean) {
+    if (showPreview && showEditor) {
+      editorWidthRatio = prevEditorWidthRatio;
+    } else if (showPreview && !showEditor) {
+      prevEditorWidthRatio = editorWidthRatio;
+      editorWidthRatio = 0.0;
+    } else if (!showPreview && showEditor) {
+      prevEditorWidthRatio = editorWidthRatio;
+      editorWidthRatio = 1.0;
+    }
+    // never
+    else {
+      console.error('showPreviw and showEditor cannot be both false. returning to initial state.');
+      editorWidthRatio = 0.5;
+    }
+    return { editorWidthRatio };
+  }
 
   export const snapshot: Snapshot = {
     capture: () => ({
@@ -46,7 +84,6 @@
     }),
     restore: (state) => {
       $markdown = state.markdown || WELCOME_MESSAGE;
-      console.log('🚀 ~ file: +page.svelte:60 ~ $markdown:', $markdown, { state });
       showToc = state.showToc;
       showEditor = state.showEditor;
       showProperties = state.showProperties;
@@ -74,54 +111,6 @@
   function handleSelectMore({ detail }: { detail: SelectedType }) {
     $selecteds.push(window.structuredClone(detail));
     $selecteds = $selecteds;
-  }
-
-  function toggleShowToc() {
-    if (showToc) {
-      showToc = false;
-      prevTocWidth = tocWidth;
-      tocWidth = 0;
-    } else {
-      showToc = true;
-      tocWidth = prevTocWidth;
-    }
-  }
-  function toggleShowProperties() {
-    if (showProperties) {
-      showProperties = false;
-      prevPropertiesWidth = propertiesWidth;
-      propertiesWidth = 0;
-    } else {
-      showProperties = true;
-      propertiesWidth = prevPropertiesWidth;
-    }
-  }
-
-  function toggleShowEditor() {
-    console.log('🚀 ~ toggleShowEditor ~ showEditor:', showEditor);
-    if (showEditor) {
-      showEditor = false;
-      prevEditorWidthRatio = editorWidthRatio;
-      editorWidthRatio = 0.0;
-    } else {
-      showEditor = true;
-      editorWidthRatio = prevEditorWidthRatio;
-    }
-    console.log('🚀 ~ editorWidthRatio:', editorWidthRatio, { prevEditorWidthRatio });
-  }
-
-  function toggleShowPreview() {
-    // turn showPreview on
-    if (!showPreview) {
-      showPreview = true;
-      editorWidthRatio = prevEditorWidthRatio;
-    }
-    // turn off
-    else {
-      showPreview = false;
-      prevEditorWidthRatio = editorWidthRatio;
-      editorWidthRatio = 1.0;
-    }
   }
 
   async function handleGistPage(pageHash: string): Promise<boolean> {
@@ -173,14 +162,24 @@
     style:--toc-width={`${tocWidth}px`}
     style:--properties-width={`${propertiesWidth}px`}
     style:--editor-width={`minmax(0, ${editorWidthRatio * 100}fr)`}
-    style:--preview-width={`minmax(0, ${_previewWidthRatio * 100}fr)`}
+    style:--preview-width={`minmax(0, ${previewWidthRatio * 100}fr)`}
   >
     <nav class="navigator">
       <div class="left">
-        <button on:click={toggleShowToc}>ToC</button>
-        <button on:click={toggleShowEditor}>Editor</button>
-        <button on:click={toggleShowPreview}>Preview</button>
-        <button on:click={toggleShowProperties}>Properties</button>
+        <button aria-pressed={showToc} on:click={() => (showToc = !showToc)}>ToC</button>
+        <button
+          aria-pressed={showEditor}
+          disabled={!showPreview}
+          on:click={() => (showEditor = !showEditor)}>Editor</button
+        >
+        <button
+          aria-pressed={showPreview}
+          disabled={!showEditor}
+          on:click={() => (showPreview = !showPreview)}>Preview</button
+        >
+        <button aria-pressed={showProperties} on:click={() => (showProperties = !showProperties)}
+          >Properties</button
+        >
       </div>
       <div class="right">
         <button on:click={() => (showPresentation = true)}>Presentation</button>
@@ -296,10 +295,22 @@
   .navigator > div {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
   }
   .navigator button {
     height: 24px;
+    position: relative;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  .navigator button[aria-pressed='true'] {
+    top: 1px;
+    left: 1px;
+    box-shadow: none;
+  }
+  .navigator button:disabled {
+    background-color: rgba(239, 239, 239, 0.7);
+    color: rgba(16, 16, 16, 0.7);
+    border-color: rgba(118, 118, 118, 0.1);
   }
 
   .toc {
