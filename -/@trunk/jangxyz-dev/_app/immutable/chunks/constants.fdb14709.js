@@ -1,0 +1,1 @@
+const t=["both","colorblind-dark","colorblind-light","colorblind","core","dark","dimmed-dark","dimmed","high-contrast-dark","high-contrast-light","high-contrast","light","tritanopia-dark","tritanopia-light","tritanopia"];export{t as themeNames};
